@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中药计价系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f8fcfb;
+            color: #333;
+            line-height: 1.5;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 4px rgba(76, 175, 160, 0.1);
+            border: 1px solid #e0f2f1;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            color: #666;
+        }
+        
+        .tab.active {
+            background-color: #80cbc4;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #e8f5f3;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(76, 175, 160, 0.08);
+            margin-bottom: 15px;
+            border: 1px solid #e0f2f1;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 首页布局 - 左右分栏 */
+        .home-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .home-container {
+                flex-direction: column;
+            }
+        }
+        
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-section {
+            background-color: #f7fdfc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #e0f2f1;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b2dfdb;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 180px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            background-color: white;
+            line-height: 1.6;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #80cbc4;
+            box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: #80cbc4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #6bb9b1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(128, 203, 196, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: #ffd54f;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #ffca28;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #80cbc4;
+            border: 2px solid #80cbc4;
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(128, 203, 196, 0.1);
+        }
+        
+        .results-section {
+            background-color: #f7fdfc;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e0f2f1;
+            height: 100%;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0f2f1;
+        }
+        
+        .results-title {
+            color: #4a8c87;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .price-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #80cbc4;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            background-color: rgba(128, 203, 196, 0.1);
+        }
+        
+        .price-toggle:hover {
+            background-color: rgba(128, 203, 196, 0.2);
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            flex-grow: 1;
+        }
+        
+        .results-table th {
+            background-color: #80cbc4;
+            color: white;
+            text-align: left;
+            padding: 10px 8px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .results-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e8f5f3;
+            height: 38px;
+            position: relative;
+        }
+        
+        .results-table tr:nth-child(even) {
+            background-color: #fafefe;
+        }
+        
+        .results-table tr:hover {
+            background-color: #f0f9f8;
+        }
+        
+        .total-price {
+            text-align: right;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #4a8c87;
+            background-color: #f0f9f8;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #e0f2f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .total-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .herb-count {
+            font-size: 14px;
+            color: #4a8c87;
+            font-weight: 600;
+            padding: 4px 12px;
+            background-color: rgba(128, 203, 196, 0.1);
+            border-radius: 4px;
+        }
+        
+        .total-amount {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 后台管理布局优化 */
+        .admin-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 38px;
+            border: 1px solid #b2dfdb;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #80cbc4;
+            box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #80cbc4;
+            font-size: 14px;
+        }
+        
+        .admin-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .price-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e0f2f1;
+            border-radius: 6px;
+            background-color: white;
+        }
+        
+        .price-item {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 0.8fr 1.5fr 0.5fr;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #e8f5f3;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .price-item.header {
+            font-weight: 700;
+            background-color: #f0f9f8;
+            color: #4a8c87;
+            border-bottom: 2px solid #b2dfdb;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .price-item:last-child {
+            border-bottom: none;
+        }
+        
+        .price-item:nth-child(even) {
+            background-color: #fafefe;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            color: #ff8a80;
+        }
+        
+        .delete-btn:hover {
+            background-color: rgba(255, 138, 128, 0.15);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+        
+        .success {
+            background-color: #80cbc4;
+        }
+        
+        .error {
+            background-color: #ff8a80;
+        }
+        
+        .info {
+            background-color: #64b5f6;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .upload-file-input {
+            display: none;
+        }
+        
+        .upload-progress {
+            margin: 10px 0;
+            padding: 12px;
+            background-color: #f0f9f8;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #4a8c87;
+            border-left: 4px solid #80cbc4;
+        }
+        
+        .data-count {
+            margin: 8px 0 12px 0;
+            font-size: 13px;
+            color: #4a8c87;
+            text-align: center;
+            padding: 6px;
+            background-color: #f7fdfc;
+            border-radius: 4px;
+            border: 1px solid #e0f2f1;
+        }
+        
+        .zero-price {
+            color: #ff8a80;
+            font-weight: 600;
+        }
+        
+        .not-found {
+            color: #ff8a80;
+            font-weight: 600;
+        }
+        
+        .empty-results {
+            text-align: center;
+            color: #7aa9a5;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+        
+        .empty-results i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #b2dfdb;
+        }
+        
+        /* 可编辑单元格样式 */
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .editable-cell:hover {
+            background-color: rgba(128, 203, 196, 0.1);
+        }
+        
+        .editable-cell.editing {
+            padding: 0;
+        }
+        
+        .editable-cell input {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #80cbc4;
+            padding: 6px;
+            font-size: 13px;
+            outline: none;
+            border-radius: 3px;
+            background-color: white;
+        }
+        
+        .price-toggle.active .fa-eye {
+            display: none;
+        }
+        
+        .price-toggle.active .fa-eye-slash {
+            display: inline-block;
+        }
+        
+        .price-toggle:not(.active) .fa-eye-slash {
+            display: none;
+        }
+        
+        .price-toggle:not(.active) .fa-eye {
+            display: inline-block;
+        }
+        
+        @media (max-width: 768px) {
+            .home-container {
+                flex-direction: column;
+            }
+            
+            .price-item {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                padding: 8px;
+            }
+            
+            .price-item.header {
+                display: none;
+            }
+            
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .admin-buttons {
+                justify-content: center;
+            }
+            
+            .results-table {
+                font-size: 12px;
+            }
+            
+            .results-table th, .results-table td {
+                padding: 6px 4px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .total-price {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            
+            .total-info {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="home">方剂计价</div>
+            <div class="tab" data-tab="admin">价格管理</div>
+        </div>
+
+        <!-- 首页 - 方剂价格计算 -->
+        <div id="home" class="tab-content active">
+            <div class="home-container">
+                <!-- 左面板：输入区域 -->
+                <div class="left-panel">
+                    <div class="input-section">
+                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25"></textarea>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" id="calculateBtn">
+                                <i class="fas fa-calculator"></i> 计算价格
+                            </button>
+                            <button class="btn btn-secondary" id="clearBtn">
+                                <i class="fas fa-broom"></i> 清空
+                            </button>
+                            <button class="btn btn-outline" id="uploadImageBtn">
+                                <i class="fas fa-image"></i> 上传图片
+                            </button>
+                            <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右面板：结果显示 -->
+                <div class="right-panel">
+                    <div class="results-section">
+                        <div class="results-header">
+                            <div class="results-title">方剂明细</div>
+                            <div class="price-toggle" id="priceToggle">
+                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye-slash"></i>
+                            </div>
+                        </div>
+
+                        <div id="resultsContainer" class="hidden">
+                            <table class="results-table" id="resultsTable">
+                                <thead>
+                                    <tr>
+                                        <th>药材</th>
+                                        <th>用量(g)</th>
+                                        <th>位置</th>
+                                        <th class="price-header">价格</th>
+                                        <th>提示</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsBody"></tbody>
+                            </table>
+                            <div class="total-price">
+                                <div class="total-info">
+                                    <div class="herb-count" id="herbCount">0味</div>
+                                    <div class="total-amount">
+                                        <span>总价:</span>
+                                        <span id="totalAmount">0.00</span>
+                                        <span>元</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="emptyResults" class="empty-results">
+                            <i class="fas fa-leaf"></i>
+                            <div>输入方剂并点击"计算价格"查看结果</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 后台管理页面 -->
+        <div id="admin" class="tab-content">
+            <div class="admin-header">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchHerb" placeholder="搜索药材...">
+                </div>
+
+                <div class="admin-buttons">
+                    <button class="btn btn-primary" id="addHerbBtn">
+                        <i class="fas fa-plus"></i> 添加药材
+                    </button>
+                    <button class="btn btn-outline" id="uploadPriceBtn">
+                        <i class="fas fa-upload"></i> 上传Excel
+                    </button>
+                    <input type="file" id="priceFileUpload" accept=".xlsx,.xls" class="upload-file-input">
+                    <button class="btn btn-secondary" id="clearAllBtn">
+                        <i class="fas fa-trash"></i> 清空
+                    </button>
+                </div>
+            </div>
+
+            <div id="uploadProgress" class="upload-progress hidden">
+                正在处理Excel文件...
+            </div>
+
+            <div class="data-count">
+                当前数据: <span id="dataCount">0</span> 条
+            </div>
+
+            <div class="price-list">
+                <div class="price-item header">
+                    <div>药材</div>
+                    <div>位置</div>
+                    <div>单价</div>
+                    <div>提示</div>
+                    <div>操作</div>
+                </div>
+                <div id="priceList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        const STORAGE_KEY = 'herbPriceData';
+        const PRICE_VISIBILITY_KEY = 'priceVisibility';
+        let herbsData = [];
+        let isPriceVisible = true;
+        let currentResults = [];
+        let filteredHerbsData = []; // 新增：存储过滤后的药材数据，用于关联索引
+        
+        function initializeData() {
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            herbsData = storedData ? JSON.parse(storedData) : [];
+            filteredHerbsData = [...herbsData]; // 初始化过滤数据
+            
+            const visibilityState = localStorage.getItem(PRICE_VISIBILITY_KEY);
+            isPriceVisible = visibilityState === null ? true : visibilityState === 'true';
+            
+            updateDataCount();
+            updatePriceToggleState();
+        }
+        
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(herbsData));
+            updateDataCount();
+        }
+        
+        function savePriceVisibility() {
+            localStorage.setItem(PRICE_VISIBILITY_KEY, isPriceVisible);
+        }
+        
+        function updateDataCount() {
+            document.getElementById('dataCount').textContent = filteredHerbsData.length; // 改为过滤后的数据计数
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        function parsePrescription(text) {
+            const herbs = [];
+            
+            text = text.replace(/大片/g, '3');
+            text = text.replace(/个/g, '');
+            text = text.replace(/枚/g, '');
+            text = text.replace(/后下化开/g, '后下');
+            text = text.replace(/化开/g, '烊化');
+            
+            const numberMap = {
+                '一': '1', '二': '2', '三': '3', '四': '4', '五': '5',
+                '六': '6', '七': '7', '八': '8', '九': '9', '十': '10',
+                '十一': '11', '十二': '12', '十三': '13', '十四': '14', '十五': '15',
+                '二十': '20', '三十': '30', '四十': '40', '五十': '50'
+            };
+            
+            for (const [cnNum, arabicNum] of Object.entries(numberMap)) {
+                const regex = new RegExp(cnNum + '(?!\\d)', 'g');
+                text = text.replace(regex, arabicNum);
+            }
+            
+            text = text.replace(/（/g, '(').replace(/）/g, ')');
+            
+            const lines = text.split(/[\n,，]/);
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                let method = '';
+                const methodMatch = line.match(/\((.*?)\)/);
+                if (methodMatch) {
+                    method = methodMatch[1];
+                    line = line.replace(methodMatch[0], '').trim();
+                }
+                
+                const pattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)/g;
+                let match;
+                
+                while ((match = pattern.exec(line)) !== null) {
+                    let name = match[1].trim();
+                    let weight = match[2];
+                    
+                    if (name.length === 3 && name.startsWith('生')) {
+                        name = name.substring(1);
+                    }
+                    
+                    if (name === '大枣' || name === '生姜') {
+                        if (weight === '1' || weight === '') {
+                            weight = '5';
+                        }
+                    }
+                    
+                    if (name === '生姜' && line.includes('大片')) {
+                        weight = parseFloat(weight) * 3;
+                    }
+                    
+                    const weightNum = parseFloat(weight);
+                    if (!isNaN(weightNum) && weightNum > 0) {
+                        herbs.push({
+                            name: name,
+                            weight: weightNum,
+                            method: method
+                        });
+                    }
+                }
+            }
+            
+            const uniqueHerbs = [];
+            const herbMap = new Map();
+            
+            for (const herb of herbs) {
+                if (herbMap.has(herb.name)) {
+                    const existingHerb = herbMap.get(herb.name);
+                    existingHerb.weight += herb.weight;
+                    if (herb.method && !existingHerb.method.includes(herb.method)) {
+                        existingHerb.method = existingHerb.method ? 
+                            `${existingHerb.method}；${herb.method}` : herb.method;
+                    }
+                } else {
+                    herbMap.set(herb.name, {...herb});
+                }
+            }
+            
+            herbMap.forEach(herb => {
+                uniqueHerbs.push(herb);
+            });
+            
+            return uniqueHerbs;
+        }
+        
+        function calculatePrice() {
+            const input = document.getElementById('prescriptionInput').value.trim();
+            if (!input) {
+                showNotification('请输入方剂', 'error');
+                return;
+            }
+            
+            const herbs = parsePrescription(input);
+            
+            if (herbs.length === 0) {
+                showNotification('未识别到有效药材信息，请检查格式', 'error');
+                return;
+            }
+            
+            const results = [];
+            let total = 0;
+            let foundCount = 0;
+            
+            herbs.forEach(herb => {
+                let herbInfo = herbsData.find(item => item.name === herb.name);
+                
+                if (!herbInfo) {
+                    herbInfo = herbsData.find(item => 
+                        item.name.includes(herb.name) || 
+                        herb.name.includes(item.name)
+                    );
+                }
+                
+                if (herbInfo) {
+                    const price = herbInfo.price * herb.weight;
+                    total += price;
+                    foundCount++;
+                    
+                    results.push({
+                        name: herb.name,
+                        weight: herb.weight,
+                        location: herbInfo.location,
+                        price: price,
+                        hint: herbInfo.hint || '',
+                        isZeroPrice: herbInfo.price === 0,
+                        isFound: true,
+                        method: herb.method,
+                        unitPrice: herbInfo.price
+                    });
+                } else {
+                    results.push({
+                        name: herb.name,
+                        weight: herb.weight,
+                        location: '未找到',
+                        price: 0,
+                        hint: '',
+                        isZeroPrice: true,
+                        isFound: false,
+                        method: herb.method,
+                        unitPrice: 0
+                    });
+                }
+            });
+            
+            currentResults = results;
+            displayResults(results, total, foundCount, herbs.length);
+            
+            if (foundCount > 0) {
+                showNotification(`识别${herbs.length}味，匹配${foundCount}味，总价${total.toFixed(2)}元`);
+            } else {
+                showNotification(`识别${herbs.length}味，但未匹配到价格`, 'error');
+            }
+        }
+        
+        function displayResults(results, total, foundCount, totalHerbs) {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('herbCount').textContent = `${totalHerbs}味`;
+            
+            results.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const priceClass = item.isZeroPrice ? 'zero-price' : '';
+                const nameClass = item.isFound ? '' : 'not-found';
+                
+                let hintText = item.hint;
+                if (item.method) {
+                    if (hintText) {
+                        hintText += '；' + item.method;
+                    } else {
+                        hintText = item.method;
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td class="${nameClass} editable-cell" data-index="${index}" data-field="name">${item.name}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="weight">${item.weight}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="location">${item.location}</td>
+                    <td class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${item.price.toFixed(2)}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="hint">${hintText}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            document.getElementById('emptyResults').classList.add('hidden');
+            
+            updatePriceDisplay();
+            setupInlineEditing();
+        }
+        
+        function setupInlineEditing() {
+            const editableCells = document.querySelectorAll('.editable-cell');
+            
+            editableCells.forEach(cell => {
+                cell.addEventListener('dblclick', (e) => {
+                    if (e.target.classList.contains('editable-cell')) {
+                        startEditing(e.target);
+                    }
+                });
+            });
+        }
+        
+        function startEditing(cell) {
+            const originalContent = cell.textContent;
+            const field = cell.getAttribute('data-field');
+            const index = parseInt(cell.getAttribute('data-index'));
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalContent;
+            
+            cell.textContent = '';
+            cell.appendChild(input);
+            cell.classList.add('editing');
+            
+            input.focus();
+            input.select();
+            
+            input.addEventListener('blur', () => finishEditing(cell, input, field, index, originalContent));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    cell.textContent = originalContent;
+                    cell.classList.remove('editing');
+                }
+            });
+        }
+        
+        function finishEditing(cell, input, field, index, originalContent) {
+            const newValue = input.value.trim();
+            
+            if (newValue === originalContent) {
+                cell.textContent = originalContent;
+                cell.classList.remove('editing');
+                return;
+            }
+            
+            if (currentResults[index]) {
+                if (field === 'price') {
+                    const newPrice = parseFloat(newValue);
+                    if (!isNaN(newPrice)) {
+                        currentResults[index].price = newPrice;
+                        recalculateTotal();
+                        cell.textContent = newPrice.toFixed(2);
+                    } else {
+                        cell.textContent = originalContent;
+                    }
+                } else if (field === 'weight') {
+                    const newWeight = parseFloat(newValue);
+                    if (!isNaN(newWeight) && newWeight > 0) {
+                        currentResults[index].weight = newWeight;
+                        if (currentResults[index].unitPrice > 0) {
+                            currentResults[index].price = currentResults[index].unitPrice * newWeight;
+                        }
+                        recalculateTotal();
+                        cell.textContent = newWeight;
+                        const row = cell.closest('tr');
+                        const priceCell = row.cells[3];
+                        priceCell.textContent = currentResults[index].price.toFixed(2);
+                    } else {
+                        cell.textContent = originalContent;
+                    }
+                } else if (field === 'name') {
+                    currentResults[index].name = newValue;
+                    cell.textContent = newValue;
+                } else if (field === 'location') {
+                    currentResults[index].location = newValue;
+                    cell.textContent = newValue;
+                } else if (field === 'hint') {
+                    currentResults[index].hint = newValue;
+                    cell.textContent = newValue;
+                }
+            }
+            
+            cell.classList.remove('editing');
+            showNotification('已更新');
+        }
+        
+        function recalculateTotal() {
+            let total = 0;
+            currentResults.forEach(item => {
+                total += item.price || 0;
+            });
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+        
+        function updatePriceDisplay() {
+            const priceHeaders = document.querySelectorAll('.price-header');
+            const priceValues = document.querySelectorAll('td:nth-child(4)');
+            const priceToggles = document.querySelectorAll('.price-toggle');
+            
+            if (isPriceVisible) {
+                priceHeaders.forEach(header => header.style.display = 'table-cell');
+                priceValues.forEach(value => {
+                    value.style.display = 'table-cell';
+                });
+                priceToggles.forEach(toggle => {
+                    toggle.classList.remove('active');
+                });
+            } else {
+                priceHeaders.forEach(header => header.style.display = 'none');
+                priceValues.forEach(value => {
+                    value.style.display = 'none';
+                });
+                priceToggles.forEach(toggle => {
+                    toggle.classList.add('active');
+                });
+            }
+        }
+        
+        function updatePriceToggleState() {
+            const priceToggles = document.querySelectorAll('.price-toggle');
+            priceToggles.forEach(toggle => {
+                if (isPriceVisible) {
+                    toggle.classList.remove('active');
+                } else {
+                    toggle.classList.add('active');
+                }
+            });
+        }
+        
+        function togglePriceVisibility() {
+            isPriceVisible = !isPriceVisible;
+            savePriceVisibility();
+            updatePriceToggleState();
+            updatePriceDisplay();
+            
+            showNotification(isPriceVisible ? '已显示价格' : '已隐藏价格', 'info');
+        }
+        
+        function clearInput() {
+            document.getElementById('prescriptionInput').value = '';
+            document.getElementById('resultsBody').innerHTML = '';
+            document.getElementById('totalAmount').textContent = '0.00';
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('emptyResults').classList.remove('hidden');
+            document.getElementById('herbCount').textContent = '0味';
+            currentResults = [];
+            showNotification('已清空输入和计算结果');
+        }
+        
+        async function handleImageUpload(file) {
+            if (!file) return;
+            
+            showNotification('图片上传功能需要OCR服务，请手动输入方剂', 'info');
+            
+            setTimeout(() => {
+                const mockText = "桂枝 15，白芍 25，炙甘草 15";
+                document.getElementById('prescriptionInput').value = mockText;
+                showNotification('图片识别完成（模拟）');
+            }, 1000);
+        }
+        
+        function renderPriceList(filter = '') {
+            const container = document.getElementById('priceList');
+            container.innerHTML = '';
+            
+            // 更新过滤后的数据
+            filteredHerbsData = herbsData.filter(item => 
+                item.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            if (filteredHerbsData.length === 0) {
+                container.innerHTML = '<div class="price-item" style="text-align:center;color:#888;padding:20px;grid-column:1/-1;">无数据，请上传Excel</div>';
+                updateDataCount(); // 更新计数
+                return;
+            }
+            
+            filteredHerbsData.forEach((herb, index) => {
+                const item = document.createElement('div');
+                const priceClass = herb.price === 0 ? 'zero-price' : '';
+                item.className = 'price-item';
+                // 新增：存储原始数据的索引（解决过滤后索引不匹配问题）
+                item.setAttribute('data-original-index', herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price));
+                item.innerHTML = `
+                    <div class="editable-cell" data-index="${index}" data-field="name">${herb.name}</div>
+                    <div class="editable-cell" data-index="${index}" data-field="location">${herb.location}</div>
+                    <div class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${herb.price.toFixed(2)}</div>
+                    <div class="editable-cell" data-index="${index}" data-field="hint">${herb.hint || ''}</div>
+                    <div>
+                        <button class="delete-btn" data-index="${index}" data-original-index="${herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price)}"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+            
+            updateDataCount(); // 更新计数
+            
+            setupAdminInlineEditing();
+            
+            container.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const originalIndex = parseInt(e.currentTarget.getAttribute('data-original-index')); // 使用原始索引
+                    deleteHerb(originalIndex);
+                });
+            });
+        }
+        
+        function setupAdminInlineEditing() {
+            const container = document.getElementById('priceList');
+            
+            container.addEventListener('dblclick', (e) => {
+                if (e.target.classList.contains('editable-cell')) {
+                    startAdminEditing(e.target);
+                }
+            });
+        }
+        
+        function startAdminEditing(cell) {
+            const originalContent = cell.textContent;
+            const field = cell.getAttribute('data-field');
+            const index = parseInt(cell.getAttribute('data-index')); // 过滤后的数据索引
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalContent;
+            
+            cell.textContent = '';
+            cell.appendChild(input);
+            cell.classList.add('editing');
+            
+            input.focus();
+            input.select();
+            
+            input.addEventListener('blur', () => finishAdminEditing(cell, input, field, index, originalContent));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    cell.textContent = originalContent;
+                    cell.classList.remove('editing');
+                }
+            });
+        }
+        
+        function finishAdminEditing(cell, input, field, index, originalContent) {
+            const newValue = input.value.trim();
+            const item = cell.closest('.price-item');
+            const originalIndex = parseInt(item.getAttribute('data-original-index')); // 获取原始数据索引
+            
+            // 输入为空或与原内容一致，直接回显原内容
+            if (!newValue || newValue === originalContent) {
+                cell.textContent = originalContent;
+                cell.classList.remove('editing');
+                return;
+            }
+            
+            // 确保原始索引有效
+            if (originalIndex === -1 || !herbsData[originalIndex]) {
+                cell.textContent = originalContent;
+                cell.classList.remove('editing');
+                showNotification('未找到对应药材数据', 'error');
+                return;
+            }
+            
+            let success = false;
+            let displayValue = newValue;
+            
+            if (field === 'name') {
+                herbsData[originalIndex].name = newValue;
+                filteredHerbsData[index].name = newValue; // 同步更新过滤后的数据
+                success = true;
+            } else if (field === 'location') {
+                herbsData[originalIndex].location = newValue;
+                filteredHerbsData[index].location = newValue; // 同步更新过滤后的数据
+                success = true;
+            } else if (field === 'price') {
+                const newPrice = parseFloat(newValue);
+                if (!isNaN(newPrice) && newPrice >= 0) {
+                    herbsData[originalIndex].price = newPrice;
+                    filteredHerbsData[index].price = newPrice; // 同步更新过滤后的数据
+                    displayValue = newPrice.toFixed(2);
+                    success = true;
+                } else {
+                    displayValue = originalContent; // 无效价格，回显原内容
+                }
+            } else if (field === 'hint') {
+                herbsData[originalIndex].hint = newValue;
+                filteredHerbsData[index].hint = newValue; // 同步更新过滤后的数据
+                success = true;
+            }
+            
+            if (success) {
+                saveData();
+                cell.textContent = displayValue;
+                
+                // 如果是价格字段，更新颜色
+                if (field === 'price') {
+                    const newPrice = parseFloat(newValue);
+                    if (newPrice === 0) {
+                        cell.classList.add('zero-price');
+                    } else {
+                        cell.classList.remove('zero-price');
+                    }
+                }
+                
+                showNotification('已更新');
+            } else {
+                cell.textContent = originalContent;
+            }
+            
+            cell.classList.remove('editing');
+        }
+        
+        function deleteHerb(originalIndex) {
+            if (originalIndex === -1 || !herbsData[originalIndex]) {
+                showNotification('未找到对应药材数据', 'error');
+                return;
+            }
+            
+            if (confirm(`删除 ${herbsData[originalIndex].name}？`)) {
+                herbsData.splice(originalIndex, 1);
+                saveData();
+                renderPriceList(document.getElementById('searchHerb').value); // 重新渲染列表
+                showNotification('药材已删除');
+            }
+        }
+        
+        function handleBulkUpload() {
+            document.getElementById('priceFileUpload').click();
+        }
+        
+        function handleImageBtnClick() {
+            document.getElementById('imageUpload').click();
+        }
+        
+        function processUploadedFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const progressDiv = document.getElementById('uploadProgress');
+            progressDiv.classList.remove('hidden');
+            progressDiv.innerHTML = '正在读取Excel文件...';
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    progressDiv.innerHTML = '正在解析工作表...';
+                    
+                    const workbook = XLSX.read(data, { 
+                        type: 'array',
+                        cellDates: false,
+                        cellNF: false,
+                        cellText: true,
+                        raw: false
+                    });
+                    
+                    const sheetNames = workbook.SheetNames;
+                    progressDiv.innerHTML = `找到 ${sheetNames.length} 个工作表，处理第一个工作表...`;
+                    
+                    const firstSheet = workbook.Sheets[sheetNames[0]];
+                    
+                    const sheetData = XLSX.utils.sheet_to_json(firstSheet, { 
+                        header: 1,
+                        defval: '',
+                        blankrows: false
+                    });
+                    
+                    progressDiv.innerHTML = `找到 ${sheetData.length} 行数据，正在处理...`;
+                    
+                    const newHerbsData = [];
+                    let processedCount = 0;
+                    let skippedCount = 0;
+                    let zeroPriceCount = 0;
+                    
+                    for (let i = 0; i < sheetData.length; i++) {
+                        const row = sheetData[i];
+                        
+                        if (!Array.isArray(row) || row.length === 0) {
+                            skippedCount++;
+                            continue;
+                        }
+                        
+                        const herbName = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : '';
+                        const location = row[3] !== undefined && row[3] !== null ? String(row[3]).trim() : '';
+                        const hint = row[4] !== undefined && row[4] !== null ? String(row[4]).trim() : '';
+                        const priceCell = row[10] !== undefined ? row[10] : '';
+                        
+                        if (!herbName || herbName === '' || herbName === 'undefined' || herbName.toLowerCase() === 'null') {
+                            skippedCount++;
+                            continue;
+                        }
+                        
+                        let price = 0;
+                        
+                        if (priceCell === '' || priceCell === null || priceCell === undefined) {
+                            price = 0;
+                            zeroPriceCount++;
+                        } else {
+                            price = parseFloat(priceCell);
+                            if (isNaN(price)) {
+                                const priceStr = String(priceCell);
+                                const priceMatch = priceStr.match(/[-+]?\d*\.?\d+/);
+                                if (priceMatch) {
+                                    price = parseFloat(priceMatch[0]);
+                                }
+                            }
+                            
+                            if (isNaN(price)) {
+                                price = 0;
+                            }
+                            
+                            if (price === 0) zeroPriceCount++;
+                        }
+                        
+                        newHerbsData.push({
+                            name: herbName,
+                            location: location,
+                            price: price,
+                            hint: hint
+                        });
+                        
+                        processedCount++;
+                        
+                        if (processedCount % 200 === 0) {
+                            progressDiv.innerHTML = `已处理 ${processedCount} 条数据...`;
+                        }
+                    }
+                    
+                    progressDiv.innerHTML = `处理完成！有效数据: ${processedCount} 条，跳过: ${skippedCount} 条，零价格: ${zeroPriceCount} 条`;
+                    
+                    if (newHerbsData.length === 0) {
+                        showNotification('未在Excel文件中找到有效数据', 'error');
+                        progressDiv.classList.add('hidden');
+                        return;
+                    }
+                    
+                    herbsData = newHerbsData;
+                    saveData();
+                    
+                    setTimeout(() => {
+                        renderPriceList();
+                        progressDiv.classList.add('hidden');
+                        showNotification(`成功上传 ${newHerbsData.length} 条药材记录（其中 ${zeroPriceCount} 条价格为0）`, 'success');
+                    }, 800);
+                    
+                    event.target.value = '';
+                    
+                } catch (error) {
+                    console.error('处理Excel文件时出错:', error);
+                    progressDiv.classList.add('hidden');
+                    showNotification(`处理文件出错: ${error.message}`, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                progressDiv.classList.add('hidden');
+                showNotification('读取文件失败', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function clearAllData() {
+            if (herbsData.length === 0) {
+                showNotification('无数据可清空', 'info');
+                return;
+            }
+            
+            if (confirm(`清空${herbsData.length}条记录？`)) {
+                herbsData = [];
+                filteredHerbsData = []; // 清空过滤后的数据
+                saveData();
+                renderPriceList();
+                showNotification('已清空所有数据');
+            }
+        }
+        
+        function initApp() {
+            initializeData();
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId).classList.add('active');
+                    if (tabId === 'admin') renderPriceList();
+                });
+            });
+            
+            document.getElementById('calculateBtn').addEventListener('click', calculatePrice);
+            document.getElementById('clearBtn').addEventListener('click', clearInput);
+            document.getElementById('uploadImageBtn').addEventListener('click', handleImageBtnClick);
+            document.getElementById('imageUpload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageUpload(e.target.files[0]);
+                }
+            });
+            document.getElementById('addHerbBtn').addEventListener('click', () => {
+                const newHerb = {
+                    name: '新药材',
+                    location: '',
+                    price: 0,
+                    hint: ''
+                };
+                herbsData.push(newHerb);
+                filteredHerbsData.push(newHerb); // 同步添加到过滤数据
+                saveData();
+                renderPriceList();
+                showNotification('已添加新药材，请双击修改');
+            });
+            document.getElementById('uploadPriceBtn').addEventListener('click', handleBulkUpload);
+            document.getElementById('priceFileUpload').addEventListener('change', processUploadedFile);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
+            
+            document.getElementById('priceToggle').addEventListener('click', togglePriceVisibility);
+            
+            document.getElementById('searchHerb').addEventListener('input', (e) => {
+                renderPriceList(e.target.value);
+            });
+            
+            renderPriceList();
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('emptyResults').classList.remove('hidden');
+            
+            updatePriceDisplay();
+        }
+        
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+
+</html>
