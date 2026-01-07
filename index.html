@@ -595,7 +595,7 @@
                 <!-- 左面板：输入区域 -->
                 <div class="left-panel">
                     <div class="input-section">
-                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25"></textarea>
+                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25；也支持：黄精:5克，巴戟天：5g"></textarea>
 
                         <div class="action-buttons">
                             <button class="btn btn-primary" id="calculateBtn">
@@ -743,11 +743,12 @@
             setTimeout(() => notification.remove(), 3000);
         }
         
-        // 全新的解析函数 - 避免"十五"变成"105"的问题
+        // 全新的解析函数 - 新增冒号格式匹配，保留原有所有功能
         function parsePrescription(text) {
             const herbs = [];
             
-            // 1. 基础预处理
+            // 1. 基础预处理 - 新增冒号格式兼容：将冒号替换为空格，同时兼容中英文冒号
+            text = text.replace(/：/g, ' ').replace(/:/g, ' '); // 核心新增：把中英文冒号都换成空格
             text = text.replace(/大片/g, '3');
             text = text.replace(/个/g, '');
             text = text.replace(/枚/g, '');
@@ -1511,5 +1512,4 @@
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
-
 </html>
