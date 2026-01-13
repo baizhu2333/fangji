@@ -348,7 +348,7 @@
         
         .price-item {
             display: grid;
-            grid-template-columns: 1.5fr 1fr 0.8fr 1.5fr 0.5fr;
+            grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr 1.5fr 0.5fr;
             gap: 10px;
             padding: 10px;
             border-bottom: 1px solid #e8f5f3;
@@ -521,6 +521,16 @@
             display: inline-block;
         }
         
+        /* 特殊要求样式 */
+        .special-method {
+            color: #e65100;
+            font-size: 12px;
+            background-color: #fff3e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #ffcc80;
+        }
+        
         @media (max-width: 768px) {
             .home-container {
                 flex-direction: column;
@@ -595,7 +605,7 @@
                 <!-- 左面板：输入区域 -->
                 <div class="left-panel">
                     <div class="input-section">
-                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25；也支持：黄精:5克，巴戟天：5g"></textarea>
+                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25。按回车键可直接计算价格"></textarea>
 
                         <div class="action-buttons">
                             <button class="btn btn-primary" id="calculateBtn">
@@ -629,6 +639,7 @@
                                     <tr>
                                         <th>药材</th>
                                         <th>用量(g)</th>
+                                        <th>特殊</th>
                                         <th>位置</th>
                                         <th class="price-header">价格</th>
                                         <th>提示</th>
@@ -690,8 +701,9 @@
             <div class="price-list">
                 <div class="price-item header">
                     <div>药材</div>
-                    <div>位置</div>
+                    <div>用量(g)</div>
                     <div>单价</div>
+                    <div>位置</div>
                     <div>提示</div>
                     <div>操作</div>
                 </div>
@@ -743,12 +755,12 @@
             setTimeout(() => notification.remove(), 3000);
         }
         
-        // 全新的解析函数 - 新增冒号格式匹配，保留原有所有功能
+        // 增强的解析函数 - 新增特殊要求提取功能
         function parsePrescription(text) {
             const herbs = [];
             
-            // 1. 基础预处理 - 新增冒号格式兼容：将冒号替换为空格，同时兼容中英文冒号
-            text = text.replace(/：/g, ' ').replace(/:/g, ' '); // 核心新增：把中英文冒号都换成空格
+            // 1. 基础预处理
+            text = text.replace(/：/g, ' ').replace(/:/g, ' ');
             text = text.replace(/大片/g, '3');
             text = text.replace(/个/g, '');
             text = text.replace(/枚/g, '');
@@ -766,24 +778,49 @@
                 '味子': '五味子'
             };
             
-            // 3. 分割成行
+            // 3. 特殊要求关键词列表（需要提取的煎法）
+            const specialMethods = [
+                 '另包','先煎', '后下', '烊化', '冲服', '包煎', '另煎', 
+                '打碎', '捣碎', '研末', '布包', '纱布包'
+            ];
+            
+            // 4. 分割成行
             const lines = text.split(/[\n,，]/);
             
             lines.forEach(line => {
                 line = line.trim();
                 if (!line) return;
                 
-                // 提取煎法
-                let method = '';
-                const methodMatch = line.match(/\((.*?)\)/);
-                if (methodMatch) {
-                    method = methodMatch[1];
-                    line = line.replace(methodMatch[0], '').trim();
+                // 5. 提取特殊要求（括号内外的都提取）
+                let specialMethod = '';
+                let cleanedLine = line;
+                
+                // 先处理括号内的特殊要求
+                const bracketMatch = line.match(/\((.*?)\)/);
+                if (bracketMatch) {
+                    const bracketContent = bracketMatch[1];
+                    for (const method of specialMethods) {
+                        if (bracketContent.includes(method)) {
+                            specialMethod = method;
+                            break;
+                        }
+                    }
+                    cleanedLine = line.replace(bracketMatch[0], '').trim();
                 }
                 
-                // 4. 分步骤处理：先处理中文数字格式
+                // 如果没有找到括号内的特殊要求，检查整个行
+                if (!specialMethod) {
+                    for (const method of specialMethods) {
+                        if (line.includes(method)) {
+                            specialMethod = method;
+                            // 从行中移除该特殊要求
+                            cleanedLine = line.replace(method, '').trim();
+                            break;
+                        }
+                    }
+                }
                 
-                // 步骤1: 处理中文数字（如"十五"、"三十"）
+                // 6. 处理中文数字格式
                 const chineseNumbers = {
                     '十五': '15', '十六': '16', '十七': '17', '十八': '18', '十九': '19',
                     '十一': '11', '十二': '12', '十三': '13', '十四': '14',
@@ -792,13 +829,12 @@
                     '六': '6', '七': '7', '八': '8', '九': '9', '十': '10'
                 };
                 
-                // 先匹配中文数字格式：药材名 + 中文数字
+                // 处理中文数字格式：药材名 + 中文数字
                 for (const [chineseNum, arabicNum] of Object.entries(chineseNumbers)) {
-                    // 寻找"药材名中文数字"的格式（如"党参十五"）
                     const pattern = new RegExp(`([\\u4e00-\\u9fa5]{2,4})${chineseNum}`, 'g');
                     let match;
                     
-                    while ((match = pattern.exec(line)) !== null) {
+                    while ((match = pattern.exec(cleanedLine)) !== null) {
                         let herbName = match[1];
                         
                         // 处理别名
@@ -811,25 +847,23 @@
                             herbs.push({
                                 name: herbName,
                                 weight: weight,
-                                method: method
+                                specialMethod: specialMethod
                             });
                             
-                            // 将已匹配的部分替换为空，避免重复匹配
-                            line = line.replace(match[0], '');
+                            cleanedLine = cleanedLine.replace(match[0], '');
                         }
                     }
                 }
                 
-                // 步骤2: 处理普通数字格式：药材名 + 阿拉伯数字（可能有空格）
-                // 现在line中已经去除了中文数字匹配的部分
+                // 7. 处理阿拉伯数字格式
                 const arabicPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)/g;
                 let arabicMatch;
                 
-                while ((arabicMatch = arabicPattern.exec(line)) !== null) {
+                while ((arabicMatch = arabicPattern.exec(cleanedLine)) !== null) {
                     let herbName = arabicMatch[1];
                     const weightStr = arabicMatch[2];
                     
-                    // 检查是否已经添加过（中文数字可能已经添加）
+                    // 检查是否已经添加过
                     const alreadyAdded = herbs.some(h => h.name === herbName || 
                         (herbAliases[herbName] && h.name === herbAliases[herbName]));
                     
@@ -844,25 +878,27 @@
                             herbs.push({
                                 name: herbName,
                                 weight: weight,
-                                method: method
+                                specialMethod: specialMethod
                             });
                         }
                     }
                 }
             });
             
-            // 5. 合并相同药材
+            // 8. 合并相同药材
             const herbMap = new Map();
             herbs.forEach(herb => {
-                if (herbMap.has(herb.name)) {
-                    const existingHerb = herbMap.get(herb.name);
+                const key = herb.name;
+                if (herbMap.has(key)) {
+                    const existingHerb = herbMap.get(key);
                     existingHerb.weight += herb.weight;
-                    if (herb.method && !existingHerb.method.includes(herb.method)) {
-                        existingHerb.method = existingHerb.method ? 
-                            `${existingHerb.method}；${herb.method}` : herb.method;
+                    // 合并特殊要求
+                    if (herb.specialMethod && existingHerb.specialMethod !== herb.specialMethod) {
+                        existingHerb.specialMethod = existingHerb.specialMethod ? 
+                            `${existingHerb.specialMethod}；${herb.specialMethod}` : herb.specialMethod;
                     }
                 } else {
-                    herbMap.set(herb.name, {...herb});
+                    herbMap.set(key, {...herb});
                 }
             });
             
@@ -907,24 +943,24 @@
                     results.push({
                         name: herb.name,
                         weight: herb.weight,
+                        specialMethod: herb.specialMethod || '',
                         location: herbInfo.location,
                         price: price,
                         hint: herbInfo.hint || '',
                         isZeroPrice: herbInfo.price === 0,
                         isFound: true,
-                        method: herb.method,
                         unitPrice: herbInfo.price
                     });
                 } else {
                     results.push({
                         name: herb.name,
                         weight: herb.weight,
+                        specialMethod: herb.specialMethod || '',
                         location: '未找到',
                         price: 0,
                         hint: '',
                         isZeroPrice: true,
                         isFound: false,
-                        method: herb.method,
                         unitPrice: 0
                     });
                 }
@@ -951,21 +987,19 @@
                 const priceClass = item.isZeroPrice ? 'zero-price' : '';
                 const nameClass = item.isFound ? '' : 'not-found';
                 
-                let hintText = item.hint;
-                if (item.method) {
-                    if (hintText) {
-                        hintText += '；' + item.method;
-                    } else {
-                        hintText = item.method;
-                    }
+                // 处理特殊要求显示
+                let specialMethodDisplay = item.specialMethod || '';
+                if (specialMethodDisplay) {
+                    specialMethodDisplay = `<span class="special-method">${specialMethodDisplay}</span>`;
                 }
                 
                 row.innerHTML = `
                     <td class="${nameClass} editable-cell" data-index="${index}" data-field="name">${item.name}</td>
                     <td class="editable-cell" data-index="${index}" data-field="weight">${item.weight}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="specialMethod">${specialMethodDisplay}</td>
                     <td class="editable-cell" data-index="${index}" data-field="location">${item.location}</td>
                     <td class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${item.price.toFixed(2)}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="hint">${hintText}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="hint">${item.hint || ''}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -995,9 +1029,15 @@
             const field = cell.getAttribute('data-field');
             const index = parseInt(cell.getAttribute('data-index'));
             
+            // 如果是特殊要求列，需要处理HTML内容
+            let originalValue = originalContent;
+            if (field === 'specialMethod' && cell.querySelector('.special-method')) {
+                originalValue = cell.querySelector('.special-method').textContent;
+            }
+            
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = originalContent;
+            input.value = originalValue;
             
             cell.textContent = '';
             cell.appendChild(input);
@@ -1006,22 +1046,22 @@
             input.focus();
             input.select();
             
-            input.addEventListener('blur', () => finishEditing(cell, input, field, index, originalContent));
+            input.addEventListener('blur', () => finishEditing(cell, input, field, index, originalContent, originalValue));
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     input.blur();
                 } else if (e.key === 'Escape') {
-                    cell.textContent = originalContent;
+                    cell.innerHTML = originalContent;
                     cell.classList.remove('editing');
                 }
             });
         }
         
-        function finishEditing(cell, input, field, index, originalContent) {
+        function finishEditing(cell, input, field, index, originalContent, originalValue) {
             const newValue = input.value.trim();
             
-            if (newValue === originalContent) {
-                cell.textContent = originalContent;
+            if (newValue === originalValue) {
+                cell.innerHTML = originalContent;
                 cell.classList.remove('editing');
                 return;
             }
@@ -1034,7 +1074,7 @@
                         recalculateTotal();
                         cell.textContent = newPrice.toFixed(2);
                     } else {
-                        cell.textContent = originalContent;
+                        cell.innerHTML = originalContent;
                     }
                 } else if (field === 'weight') {
                     const newWeight = parseFloat(newValue);
@@ -1046,10 +1086,10 @@
                         recalculateTotal();
                         cell.textContent = newWeight;
                         const row = cell.closest('tr');
-                        const priceCell = row.cells[3];
+                        const priceCell = row.cells[4];
                         priceCell.textContent = currentResults[index].price.toFixed(2);
                     } else {
-                        cell.textContent = originalContent;
+                        cell.innerHTML = originalContent;
                     }
                 } else if (field === 'name') {
                     currentResults[index].name = newValue;
@@ -1060,6 +1100,13 @@
                 } else if (field === 'hint') {
                     currentResults[index].hint = newValue;
                     cell.textContent = newValue;
+                } else if (field === 'specialMethod') {
+                    currentResults[index].specialMethod = newValue;
+                    if (newValue) {
+                        cell.innerHTML = `<span class="special-method">${newValue}</span>`;
+                    } else {
+                        cell.textContent = '';
+                    }
                 }
             }
             
@@ -1077,7 +1124,7 @@
         
         function updatePriceDisplay() {
             const priceHeaders = document.querySelectorAll('.price-header');
-            const priceValues = document.querySelectorAll('td:nth-child(4)');
+            const priceValues = document.querySelectorAll('td:nth-child(5)');
             const priceToggles = document.querySelectorAll('.price-toggle');
             
             if (isPriceVisible) {
@@ -1163,8 +1210,9 @@
                 item.setAttribute('data-original-index', herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price));
                 item.innerHTML = `
                     <div class="editable-cell" data-index="${index}" data-field="name">${herb.name}</div>
-                    <div class="editable-cell" data-index="${index}" data-field="location">${herb.location}</div>
+                    <div class="editable-cell" data-index="${index}" data-field="weight">-</div>
                     <div class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${herb.price.toFixed(2)}</div>
+                    <div class="editable-cell" data-index="${index}" data-field="location">${herb.location}</div>
                     <div class="editable-cell" data-index="${index}" data-field="hint">${herb.hint || ''}</div>
                     <div>
                         <button class="delete-btn" data-index="${index}" data-original-index="${herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price)}"><i class="fas fa-trash-alt"></i></button>
@@ -1265,6 +1313,10 @@
             } else if (field === 'hint') {
                 herbsData[originalIndex].hint = newValue;
                 filteredHerbsData[index].hint = newValue;
+                success = true;
+            } else if (field === 'weight') {
+                // 后台管理中的重量列通常是占位符，不需要修改
+                displayValue = originalContent;
                 success = true;
             }
             
@@ -1455,6 +1507,19 @@
             }
         }
         
+        // 新增：回车键计算功能
+        function setupEnterKeyCalculation() {
+            const prescriptionInput = document.getElementById('prescriptionInput');
+            
+            prescriptionInput.addEventListener('keydown', (e) => {
+                // 检查是否按下回车键，且没有按着Ctrl或Shift
+                if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                    e.preventDefault(); // 防止在textarea中换行
+                    calculatePrice();
+                }
+            });
+        }
+        
         function initApp() {
             initializeData();
             
@@ -1501,6 +1566,9 @@
             document.getElementById('searchHerb').addEventListener('input', (e) => {
                 renderPriceList(e.target.value);
             });
+            
+            // 初始化回车键计算功能
+            setupEnterKeyCalculation();
             
             renderPriceList();
             document.getElementById('resultsContainer').classList.add('hidden');
