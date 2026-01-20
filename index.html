@@ -275,15 +275,35 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            width: 100%;
+            justify-content: space-between;
         }
         
         .herb-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
             color: #4a8c87;
             font-weight: 600;
-            padding: 4px 12px;
-            background-color: rgba(128, 203, 196, 0.1);
-            border-radius: 4px;
+        }
+        
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #80cbc4;
+            font-size: 13px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .copy-btn:hover {
+            background-color: rgba(128, 203, 196, 0.2);
         }
         
         .total-amount {
@@ -521,16 +541,29 @@
             display: inline-block;
         }
         
-        /* 特殊要求样式 */
+        /* 特殊要求样式 - 修改：去掉边框 */
         .special-method {
             color: #e65100;
             font-size: 12px;
-            background-color: #fff3e0;
-            padding: 2px 6px;
+            background-color: transparent;
+            padding: 2px 4px;
             border-radius: 3px;
-            border: 1px solid #ffcc80;
+            border: none;
+            font-style: italic;
         }
         
+        /* 单位显示样式 */
+        .unit-conversion {
+            color: #4a8c87;
+            font-size: 11px;
+            background-color: #e8f5f3;
+            padding: 1px 4px;
+            border-radius: 2px;
+            margin-left: 4px;
+            border: 1px solid #b2dfdb;
+        }
+        
+        /* 移动端优化 */
         @media (max-width: 768px) {
             .home-container {
                 flex-direction: column;
@@ -577,16 +610,52 @@
                 gap: 10px;
             }
             
+            /* 移动端：确保三个元素在同一行 */
             .total-price {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 10px;
+                padding: 12px;
             }
             
             .total-info {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 8px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: nowrap;
+                gap: 10px;
+            }
+            
+            .herb-count {
+                flex-direction: row;
+                gap: 6px;
+                font-size: 13px;
+            }
+            
+            .total-amount {
+                font-size: 16px;
+                gap: 5px;
+                flex-shrink: 0;
+            }
+            
+            /* 如果屏幕特别小，稍微调整 */
+            @media (max-width: 480px) {
+                .total-info {
+                    gap: 8px;
+                }
+                
+                .herb-count {
+                    font-size: 12px;
+                }
+                
+                .total-amount {
+                    font-size: 15px;
+                }
+            }
+        }
+        
+        /* 确保在桌面端也是单行显示 */
+        @media (min-width: 769px) {
+            .total-info {
+                flex-direction: row;
+                justify-content: space-between;
             }
         }
     </style>
@@ -605,7 +674,10 @@
                 <!-- 左面板：输入区域 -->
                 <div class="left-panel">
                     <div class="input-section">
-                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25。按回车键可直接计算价格"></textarea>
+                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25。按回车键可直接计算价格
+
+常用单位转换规则：
+• 大枣、生姜等：1个/枚/片 = 5g"></textarea>
 
                         <div class="action-buttons">
                             <button class="btn btn-primary" id="calculateBtn">
@@ -649,9 +721,13 @@
                             </table>
                             <div class="total-price">
                                 <div class="total-info">
-                                    <div class="herb-count" id="herbCount">0味</div>
+                                    <div class="herb-count">
+                                        <span id="herbCountText">0味</span>
+                                        <button class="copy-btn" id="copyDataBtn" title="复制药材信息">
+                                            <i class="far fa-copy"></i>
+                                        </button>
+                                    </div>
                                     <div class="total-amount">
-                                        <span>总价:</span>
                                         <span id="totalAmount">0.00</span>
                                         <span>元</span>
                                     </div>
@@ -755,15 +831,16 @@
             setTimeout(() => notification.remove(), 3000);
         }
         
-        // 增强的解析函数 - 新增特殊要求提取功能
+        // 修复后的解析函数 - 解决特殊要求传播问题
         function parsePrescription(text) {
             const herbs = [];
             
-            // 1. 基础预处理
+            // 1. 备份原始文本
+            const originalText = text;
+            
+            // 2. 基础预处理（保持原有逻辑）
             text = text.replace(/：/g, ' ').replace(/:/g, ' ');
-            text = text.replace(/大片/g, '3');
-            text = text.replace(/个/g, '');
-            text = text.replace(/枚/g, '');
+            // 保留单位标记，不删除"个"、"枚"、"片"等单位
             text = text.replace(/后下化开/g, '后下');
             text = text.replace(/化开/g, '烊化');
             text = text.replace(/克/g, '');
@@ -772,55 +849,70 @@
             text = text.replace(/。/g, ',');
             text = text.replace(/、/g, ',');
             
-            // 2. 中药别名映射
+            // 3. 中药别名映射
             const herbAliases = {
                 '勾藤': '钩藤',
                 '味子': '五味子'
             };
             
-            // 3. 特殊要求关键词列表（需要提取的煎法）
+            // 4. 特殊要求关键词列表（需要提取的煎法）
             const specialMethods = [
-                 '另包','先煎', '后下', '烊化', '冲服', '包煎', '另煎', 
+                '另包','先煎', '后下', '烊化', '冲服', '包煎', '另煎', 
                 '打碎', '捣碎', '研末', '布包', '纱布包'
             ];
             
-            // 4. 分割成行
-            const lines = text.split(/[\n,，]/);
+            // 5. 需要单位转换的药材列表（只保留大枣、生姜）
+            const unitConversionHerbs = [
+                '大枣', '红枣', '黑枣', '生姜', '姜', '干姜', '炮姜', '鲜姜'
+            ];
             
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
+            // 6. 单位转换规则（只保留需要的）
+            const unitConversionRules = {
+                '个': 5,    // 大枣、生姜等，1个=5g
+                '枚': 5,    // 同"个"
+                '片': 5     // 生姜片等，1片=5g
+            };
+            
+            // 7. 改进的分割方式 - 按逗号、分号、句号分割
+            let segments = text.split(/[,，;；]/);
+            
+            // 清理和处理每个片段
+            segments = segments.map(seg => seg.trim()).filter(seg => seg.length > 0);
+            
+            // 8. 处理每个片段 - 关键修复：每个片段独立处理特殊要求
+            segments.forEach(segment => {
+                // 跳过明显不是药材的片段
+                if (segment.includes('明天早上煎') || 
+                    segment.includes('一天') ||
+                    segment.includes('下午') ||
+                    segment.includes('谢谢') ||
+                    segment.includes('剂') ||
+                    segment.includes('喝') ||
+                    segment.includes('来取') ||
+                    segment.match(/^[0-9]/)) {  // 以数字开头的行
+                    return;
+                }
                 
-                // 5. 提取特殊要求（括号内外的都提取）
+                // 9. 关键修复：为每个片段单独提取特殊要求
                 let specialMethod = '';
-                let cleanedLine = line;
+                let cleanedSegment = segment;
                 
                 // 先处理括号内的特殊要求
-                const bracketMatch = line.match(/\((.*?)\)/);
+                const bracketMatch = segment.match(/\((.*?)\)/);
                 if (bracketMatch) {
                     const bracketContent = bracketMatch[1];
+                    // 检查括号内容是否包含特殊煎法
                     for (const method of specialMethods) {
                         if (bracketContent.includes(method)) {
                             specialMethod = method;
                             break;
                         }
                     }
-                    cleanedLine = line.replace(bracketMatch[0], '').trim();
+                    // 移除括号及内容
+                    cleanedSegment = segment.replace(bracketMatch[0], '').trim();
                 }
                 
-                // 如果没有找到括号内的特殊要求，检查整个行
-                if (!specialMethod) {
-                    for (const method of specialMethods) {
-                        if (line.includes(method)) {
-                            specialMethod = method;
-                            // 从行中移除该特殊要求
-                            cleanedLine = line.replace(method, '').trim();
-                            break;
-                        }
-                    }
-                }
-                
-                // 6. 处理中文数字格式
+                // 10. 处理中文数字格式
                 const chineseNumbers = {
                     '十五': '15', '十六': '16', '十七': '17', '十八': '18', '十九': '19',
                     '十一': '11', '十二': '12', '十三': '13', '十四': '14',
@@ -829,39 +921,51 @@
                     '六': '6', '七': '7', '八': '8', '九': '9', '十': '10'
                 };
                 
-                // 处理中文数字格式：药材名 + 中文数字
+                // 处理中文数字格式：药材名 + 中文数字 + 可选单位
                 for (const [chineseNum, arabicNum] of Object.entries(chineseNumbers)) {
-                    const pattern = new RegExp(`([\\u4e00-\\u9fa5]{2,4})${chineseNum}`, 'g');
+                    // 匹配模式：药材名 + 中文数字 + 可选单位
+                    const pattern = new RegExp(`([\\u4e00-\\u9fa5]{2,4})${chineseNum}\\s*(个|枚|片)?`, 'g');
                     let match;
                     
-                    while ((match = pattern.exec(cleanedLine)) !== null) {
+                    while ((match = pattern.exec(cleanedSegment)) !== null) {
                         let herbName = match[1];
+                        const unit = match[2] || '';
                         
                         // 处理别名
                         if (herbAliases[herbName]) {
                             herbName = herbAliases[herbName];
                         }
                         
-                        const weight = parseFloat(arabicNum);
+                        let weight = parseFloat(arabicNum);
+                        
+                        // 应用单位转换（仅对大枣、生姜等）
+                        if (unit && unitConversionRules[unit]) {
+                            const needsConversion = unitConversionHerbs.some(name => herbName.includes(name));
+                            if (needsConversion) {
+                                weight = weight * unitConversionRules[unit];
+                            }
+                        }
+                        
                         if (!isNaN(weight) && weight > 0) {
                             herbs.push({
                                 name: herbName,
                                 weight: weight,
-                                specialMethod: specialMethod
+                                specialMethod: specialMethod, // 只使用当前片段的特殊要求
+                                originalUnit: unit,
+                                converted: unit !== ''
                             });
-                            
-                            cleanedLine = cleanedLine.replace(match[0], '');
                         }
                     }
                 }
                 
-                // 7. 处理阿拉伯数字格式
-                const arabicPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)/g;
+                // 11. 处理阿拉伯数字格式
+                const arabicPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)\s*(个|枚|片)?/g;
                 let arabicMatch;
                 
-                while ((arabicMatch = arabicPattern.exec(cleanedLine)) !== null) {
+                while ((arabicMatch = arabicPattern.exec(cleanedSegment)) !== null) {
                     let herbName = arabicMatch[1];
                     const weightStr = arabicMatch[2];
+                    const unit = arabicMatch[3] || '';
                     
                     // 检查是否已经添加过
                     const alreadyAdded = herbs.some(h => h.name === herbName || 
@@ -873,30 +977,120 @@
                             herbName = herbAliases[herbName];
                         }
                         
-                        const weight = parseFloat(weightStr);
+                        let weight = parseFloat(weightStr);
+                        
+                        // 应用单位转换（仅对大枣、生姜等）
+                        if (unit && unitConversionRules[unit]) {
+                            const needsConversion = unitConversionHerbs.some(name => herbName.includes(name));
+                            if (needsConversion) {
+                                weight = weight * unitConversionRules[unit];
+                            }
+                        }
+                        
                         if (!isNaN(weight) && weight > 0) {
                             herbs.push({
                                 name: herbName,
                                 weight: weight,
-                                specialMethod: specialMethod
+                                specialMethod: specialMethod, // 只使用当前片段的特殊要求
+                                originalUnit: unit,
+                                converted: unit !== ''
                             });
                         }
                     }
                 }
             });
             
-            // 8. 合并相同药材
+            // 12. 修复：单独处理"生龙骨 30g（先煎）"格式
+            // 使用原始文本，避免预处理影响
+            const complexPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)\s*(?:g|克)?\s*\(?(先煎|后下|烊化|冲服|包煎|另煎)\)?/g;
+            let complexMatch;
+            
+            while ((complexMatch = complexPattern.exec(originalText)) !== null) {
+                const herbName = complexMatch[1];
+                const weightStr = complexMatch[2];
+                const method = complexMatch[3];
+                
+                // 查找是否已存在该药材
+                const existingIndex = herbs.findIndex(h => h.name === herbName);
+                
+                if (existingIndex !== -1) {
+                    // 如果已存在，补充特殊要求
+                    if (!herbs[existingIndex].specialMethod) {
+                        herbs[existingIndex].specialMethod = method;
+                    }
+                } else {
+                    // 如果不存在，添加新药材
+                    const weight = parseFloat(weightStr);
+                    if (!isNaN(weight) && weight > 0) {
+                        herbs.push({
+                            name: herbName,
+                            weight: weight,
+                            specialMethod: method,
+                            originalUnit: '',
+                            converted: false
+                        });
+                    }
+                }
+            }
+            
+            // 13. 处理没有数字的情况（如："生姜3片"）
+            // 扫描原始文本中的药材名+单位格式
+            const unitPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)\s*(个|枚|片)/g;
+            let unitMatch;
+            
+            while ((unitMatch = unitPattern.exec(originalText)) !== null) {
+                const herbName = unitMatch[1];
+                const weightStr = unitMatch[2];
+                const unit = unitMatch[3];
+                
+                // 检查是否已经添加过
+                const existingIndex = herbs.findIndex(h => h.name === herbName);
+                
+                if (existingIndex === -1) {
+                    let weight = parseFloat(weightStr);
+                    
+                    // 应用单位转换（仅对大枣、生姜等）
+                    if (unit && unitConversionRules[unit]) {
+                        const needsConversion = unitConversionHerbs.some(name => herbName.includes(name));
+                        if (needsConversion) {
+                            weight = weight * unitConversionRules[unit];
+                        }
+                    }
+                    
+                    if (!isNaN(weight) && weight > 0) {
+                        herbs.push({
+                            name: herbName,
+                            weight: weight,
+                            specialMethod: '', // 单位转换的药材通常没有特殊要求
+                            originalUnit: unit,
+                            converted: true
+                        });
+                    }
+                }
+            }
+            
+            // 14. 合并相同药材 - 保持原有逻辑
             const herbMap = new Map();
             herbs.forEach(herb => {
                 const key = herb.name;
                 if (herbMap.has(key)) {
                     const existingHerb = herbMap.get(key);
                     existingHerb.weight += herb.weight;
-                    // 合并特殊要求
-                    if (herb.specialMethod && existingHerb.specialMethod !== herb.specialMethod) {
-                        existingHerb.specialMethod = existingHerb.specialMethod ? 
-                            `${existingHerb.specialMethod}；${herb.specialMethod}` : herb.specialMethod;
+                    // 关键修复：特殊要求合并逻辑
+                    if (herb.specialMethod && !existingHerb.specialMethod) {
+                        // 如果现有药材没有特殊要求，但新药材有，则使用新的
+                        existingHerb.specialMethod = herb.specialMethod;
+                    } else if (herb.specialMethod && existingHerb.specialMethod && 
+                               herb.specialMethod !== existingHerb.specialMethod) {
+                        // 如果两者都有但不同，合并（用分号分隔）
+                        existingHerb.specialMethod = `${existingHerb.specialMethod}；${herb.specialMethod}`;
                     }
+                    // 合并单位信息
+                    if (herb.originalUnit) {
+                        existingHerb.originalUnit = existingHerb.originalUnit ? 
+                            `${existingHerb.originalUnit}+${herb.originalUnit}` : herb.originalUnit;
+                    }
+                    existingHerb.converted = existingHerb.converted || herb.converted;
                 } else {
                     herbMap.set(key, {...herb});
                 }
@@ -922,6 +1116,7 @@
             const results = [];
             let total = 0;
             let foundCount = 0;
+            let unitConvertedCount = 0;
             
             herbs.forEach(herb => {
                 // 精确匹配
@@ -940,6 +1135,10 @@
                     total += price;
                     foundCount++;
                     
+                    if (herb.converted) {
+                        unitConvertedCount++;
+                    }
+                    
                     results.push({
                         name: herb.name,
                         weight: herb.weight,
@@ -949,7 +1148,9 @@
                         hint: herbInfo.hint || '',
                         isZeroPrice: herbInfo.price === 0,
                         isFound: true,
-                        unitPrice: herbInfo.price
+                        unitPrice: herbInfo.price,
+                        originalUnit: herb.originalUnit || '',
+                        converted: herb.converted
                     });
                 } else {
                     results.push({
@@ -961,26 +1162,32 @@
                         hint: '',
                         isZeroPrice: true,
                         isFound: false,
-                        unitPrice: 0
+                        unitPrice: 0,
+                        originalUnit: herb.originalUnit || '',
+                        converted: herb.converted
                     });
                 }
             });
             
             currentResults = results;
-            displayResults(results, total, foundCount, herbs.length);
+            displayResults(results, total, foundCount, herbs.length, unitConvertedCount);
             
             if (foundCount > 0) {
-                showNotification(`识别${herbs.length}味，匹配${foundCount}味，总价${total.toFixed(2)}元`);
+                let message = `识别${herbs.length}味，匹配${foundCount}味，总价${total.toFixed(2)}元`;
+                if (unitConvertedCount > 0) {
+                    message += `（${unitConvertedCount}味已进行单位转换）`;
+                }
+                showNotification(message);
             } else {
                 showNotification(`识别${herbs.length}味，但未匹配到价格`, 'error');
             }
         }
         
-        function displayResults(results, total, foundCount, totalHerbs) {
+        function displayResults(results, total, foundCount, totalHerbs, unitConvertedCount) {
             const tbody = document.getElementById('resultsBody');
             tbody.innerHTML = '';
             
-            document.getElementById('herbCount').textContent = `${totalHerbs}味`;
+            document.getElementById('herbCountText').textContent = `${totalHerbs}味`;
             
             results.forEach((item, index) => {
                 const row = document.createElement('tr');
@@ -993,9 +1200,15 @@
                     specialMethodDisplay = `<span class="special-method">${specialMethodDisplay}</span>`;
                 }
                 
+                // 处理单位转换显示
+                let weightDisplay = item.weight.toFixed(1);
+                if (item.originalUnit && item.converted) {
+                    weightDisplay = `${weightDisplay} <span class="unit-conversion" title="原始单位: ${item.originalUnit}">${item.originalUnit}→g</span>`;
+                }
+                
                 row.innerHTML = `
                     <td class="${nameClass} editable-cell" data-index="${index}" data-field="name">${item.name}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="weight">${item.weight}</td>
+                    <td class="editable-cell" data-index="${index}" data-field="weight">${weightDisplay}</td>
                     <td class="editable-cell" data-index="${index}" data-field="specialMethod">${specialMethodDisplay}</td>
                     <td class="editable-cell" data-index="${index}" data-field="location">${item.location}</td>
                     <td class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${item.price.toFixed(2)}</td>
@@ -1010,6 +1223,39 @@
             
             updatePriceDisplay();
             setupInlineEditing();
+        }
+        
+        // 新增：复制药材信息功能
+        function copyHerbDataToClipboard() {
+            if (currentResults.length === 0) {
+                showNotification('没有药材信息可以复制', 'error');
+                return;
+            }
+            
+            // 构建表格格式的文本
+            let tableText = '';
+            currentResults.forEach(item => {
+                // 药材名称 + 制表符 + 用量 + 制表符 + 特殊要求
+                tableText += `${item.name}\t${item.weight.toFixed(1)}\t${item.specialMethod || ''}\n`;
+            });
+            
+            // 使用 Clipboard API 复制到剪贴板
+            navigator.clipboard.writeText(tableText).then(() => {
+                showNotification('已复制药材信息到剪贴板，可用Ctrl+V粘贴到Excel或Word中');
+            }).catch(err => {
+                // 如果 Clipboard API 失败，使用备用方法
+                const textArea = document.createElement('textarea');
+                textArea.value = tableText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('已复制药材信息到剪贴板，可用Ctrl+V粘贴到Excel或Word中');
+                } catch (e) {
+                    showNotification('复制失败，请手动复制', 'error');
+                }
+                document.body.removeChild(textArea);
+            });
         }
         
         function setupInlineEditing() {
@@ -1172,7 +1418,7 @@
             document.getElementById('totalAmount').textContent = '0.00';
             document.getElementById('resultsContainer').classList.add('hidden');
             document.getElementById('emptyResults').classList.remove('hidden');
-            document.getElementById('herbCount').textContent = '0味';
+            document.getElementById('herbCountText').textContent = '0味';
             currentResults = [];
             showNotification('已清空输入和计算结果');
         }
@@ -1315,7 +1561,6 @@
                 filteredHerbsData[index].hint = newValue;
                 success = true;
             } else if (field === 'weight') {
-                // 后台管理中的重量列通常是占位符，不需要修改
                 displayValue = originalContent;
                 success = true;
             }
@@ -1507,14 +1752,12 @@
             }
         }
         
-        // 新增：回车键计算功能
         function setupEnterKeyCalculation() {
             const prescriptionInput = document.getElementById('prescriptionInput');
             
             prescriptionInput.addEventListener('keydown', (e) => {
-                // 检查是否按下回车键，且没有按着Ctrl或Shift
                 if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-                    e.preventDefault(); // 防止在textarea中换行
+                    e.preventDefault();
                     calculatePrice();
                 }
             });
@@ -1562,12 +1805,12 @@
             document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
             
             document.getElementById('priceToggle').addEventListener('click', togglePriceVisibility);
+            document.getElementById('copyDataBtn').addEventListener('click', copyHerbDataToClipboard);
             
             document.getElementById('searchHerb').addEventListener('input', (e) => {
                 renderPriceList(e.target.value);
             });
             
-            // 初始化回车键计算功能
             setupEnterKeyCalculation();
             
             renderPriceList();
