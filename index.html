@@ -282,6 +282,8 @@
             align-items: center;
             gap: 15px;
             flex-wrap: wrap;
+            width: 100%;
+            justify-content: space-between;
         }
         
         .herb-count {
@@ -314,6 +316,8 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            min-width: 50px;
+            justify-content: center;
         }
         
         .copy-btn:hover {
@@ -611,41 +615,46 @@
             }
             
             .total-price {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-                padding: 12px; /* 减少padding */
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 15px;
+                height: auto;
             }
             
             .total-info {
                 flex-direction: row;
                 justify-content: space-between;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
+                width: 100%;
+                flex-wrap: nowrap;
             }
             
             .herb-count {
-                flex: 1;
-                justify-content: flex-start;
-                padding: 3px 10px; /* 减少padding */
+                flex: 0 0 auto;
+                padding: 3px 8px;
                 font-size: 13px;
+                gap: 6px;
+                white-space: nowrap;
             }
             
             .total-amount {
-                flex: 1;
-                justify-content: flex-end;
-                font-size: 16px; /* 稍微减小字体 */
+                flex: 0 0 auto;
+                font-size: 16px;
+                white-space: nowrap;
             }
             
             .copy-btn {
                 flex: 0 0 auto;
-                padding: 1px 6px; /* 减少padding */
+                padding: 2px 6px;
                 font-size: 11px;
+                min-width: 40px;
             }
             
             .btn {
                 min-width: 120px;
-                padding: 10px 20px; /* 减少padding */
+                padding: 10px 20px;
             }
             
             .btn-sm {
@@ -656,46 +665,42 @@
         
         @media (max-width: 480px) {
             .total-info {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .herb-count, .total-amount {
-                flex: 0 0 100%;
-                justify-content: center;
-                margin-bottom: 6px; /* 减少间距 */
+                flex-wrap: nowrap;
+                gap: 6px;
             }
             
             .herb-count {
-                margin-bottom: 6px;
-                order: 1;
+                font-size: 12px;
+                padding: 2px 6px;
             }
             
             .total-amount {
-                order: 2;
-                margin-bottom: 6px;
+                font-size: 15px;
             }
             
             .copy-btn {
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 4px;
+                font-size: 10px;
+                padding: 2px 4px;
+                min-width: 36px;
+            }
+            
+            .total-price {
+                padding: 8px 12px;
             }
             
             .results-table td {
-                height: 30px; /* 更小的屏幕进一步缩短行高 */
+                height: 30px;
             }
             
             .results-table th, .results-table td {
-                padding: 4px 3px; /* 进一步减少padding */
+                padding: 4px 3px;
             }
         }
         
         /* 超小屏幕设备进一步优化 */
         @media (max-width: 360px) {
             .results-table td {
-                height: 28px; /* 进一步缩短行高 */
+                height: 28px;
                 font-size: 11px;
             }
             
@@ -705,11 +710,22 @@
             }
             
             .total-price {
-                padding: 10px;
+                padding: 6px 10px;
             }
             
             .total-amount {
-                font-size: 15px;
+                font-size: 14px;
+            }
+            
+            .herb-count {
+                font-size: 11px;
+                padding: 2px 4px;
+            }
+            
+            .copy-btn {
+                font-size: 9px;
+                padding: 1px 3px;
+                min-width: 32px;
             }
         }
     </style>
@@ -775,7 +791,7 @@
                                     <div class="herb-count" id="herbCount">
                                         <span id="herbCountText">0味</span>
                                         <button class="copy-btn" id="copyHerbsBtn" title="复制药材列表">
-                                            <i class="fas fa-copy"></i> 复制
+                                            <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
                                     <div class="total-amount">
@@ -1201,7 +1217,7 @@
             setupInlineEditing();
         }
         
-        // 修改：复制药材列表功能 - 只复制前三列，去掉标题
+        // 修改：复制药材列表功能 - 只复制前三列，去掉标题和总价
         function copyHerbsList() {
             if (currentResults.length === 0) {
                 showNotification('没有药材数据可复制', 'error');
@@ -1216,10 +1232,6 @@
                 const weightDisplay = item.convertedWeight || item.weight;
                 copyText += `${item.name}\t${weightDisplay}\t${item.specialMethod || ''}\n`;
             });
-            
-            // 添加总计
-            const total = currentResults.reduce((sum, item) => sum + (item.price || 0), 0);
-            copyText += `\n总计：${total.toFixed(2)}元（${currentResults.length}味）`;
             
             // 复制到剪贴板
             navigator.clipboard.writeText(copyText).then(() => {
