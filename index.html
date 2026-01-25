@@ -1,585 +1,296 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中药计价系统</title>
+    <title>药品库存管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Microsoft YaHei', sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
         
         body {
-            background-color: #f8fcfb;
+            background-color: #f5f7fa;
             color: #333;
-            line-height: 1.5;
-            padding: 10px;
+            padding: 20px;
+            min-height: 100vh;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-        }
-        
-        .nav-tabs {
-            display: flex;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            box-shadow: 0 1px 4px rgba(76, 175, 160, 0.1);
-            border: 1px solid #e0f2f1;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            color: #666;
-        }
-        
-        .tab.active {
-            background-color: #80cbc4;
-            color: white;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-        
-        .tab:hover:not(.active) {
-            background-color: #e8f5f3;
-        }
-        
-        .tab-content {
-            display: none;
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(76, 175, 160, 0.08);
-            margin-bottom: 15px;
-            border: 1px solid #e0f2f1;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* 首页布局 - 左右分栏 */
-        .home-container {
-            display: flex;
-            gap: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .home-container {
-                flex-direction: column;
-            }
-        }
-        
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .input-section {
-            background-color: #f7fdfc;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #e0f2f1;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #b2dfdb;
-            border-radius: 6px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 180px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
             background-color: white;
-            line-height: 1.6;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
         }
         
-        textarea:focus {
-            outline: none;
-            border-color: #80cbc4;
-            box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            flex: 1;
-        }
-        
-        .btn-primary {
-            background-color: #80cbc4;
+        header {
+            background-color: #2c80ff;
             color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #6bb9b1;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(128, 203, 196, 0.3);
-        }
-        
-        .btn-secondary {
-            background-color: #ffd54f;
-            color: #333;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #ffca28;
-            transform: translateY(-2px);
-        }
-        
-        .btn-outline {
-            background-color: transparent;
-            color: #80cbc4;
-            border: 2px solid #80cbc4;
-        }
-        
-        .btn-outline:hover {
-            background-color: rgba(128, 203, 196, 0.1);
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            flex: 0 0 auto;
-        }
-        
-        .results-section {
-            background-color: #f7fdfc;
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid #e0f2f1;
-            height: 100%;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .results-header {
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e0f2f1;
         }
         
-        .results-title {
-            color: #4a8c87;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .price-toggle {
+        .logo-area {
             display: flex;
             align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            color: #80cbc4;
-            font-size: 13px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            transition: all 0.3s;
-            background-color: rgba(128, 203, 196, 0.1);
         }
         
-        .price-toggle:hover {
-            background-color: rgba(128, 203, 196, 0.2);
-        }
-        
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            flex-grow: 1;
-        }
-        
-        .results-table th {
-            background-color: #80cbc4;
-            color: white;
-            text-align: left;
-            padding: 10px 8px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .results-table td {
-            padding: 8px;
-            border-bottom: 1px solid #e8f5f3;
-            height: 38px;
-            position: relative;
-        }
-        
-        .results-table tr:nth-child(even) {
-            background-color: #fafefe;
-        }
-        
-        .results-table tr:hover {
-            background-color: #f0f9f8;
-        }
-        
-        .total-price {
-            text-align: right;
-            padding: 15px;
-            font-size: 18px;
+        .logo {
+            font-size: 28px;
             font-weight: 700;
-            color: #4a8c87;
-            background-color: #f0f9f8;
-            border-radius: 6px;
-            margin-top: 15px;
-            border: 1px solid #e0f2f1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            margin-right: 15px;
         }
         
-        .total-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            width: 100%;
-            justify-content: space-between;
-        }
-        
-        .herb-count {
+        .logo-sub {
             font-size: 14px;
-            color: #4a8c87;
-            font-weight: 600;
-            padding: 4px 12px;
-            background-color: rgba(128, 203, 196, 0.1);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            opacity: 0.9;
         }
         
-        .total-amount {
+        .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .copy-btn {
-            background-color: rgba(128, 203, 196, 0.2);
-            border: none;
-            border-radius: 4px;
-            padding: 2px 8px;
-            cursor: pointer;
-            color: #4a8c87;
-            font-size: 12px;
-            transition: all 0.3s;
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 4px;
-            min-width: 50px;
             justify-content: center;
+            color: #2c80ff;
+            font-weight: bold;
         }
         
-        .copy-btn:hover {
-            background-color: rgba(128, 203, 196, 0.4);
-        }
-        
-        /* 后台管理布局优化 */
-        .admin-header {
+        .control-panel {
+            padding: 25px 30px;
+            background-color: #f9fbfd;
+            border-bottom: 1px solid #eaeef5;
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            align-items: center;
             flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
         }
         
         .search-box {
             flex: 1;
-            min-width: 200px;
+            min-width: 300px;
             position: relative;
         }
         
         .search-box input {
             width: 100%;
-            padding: 10px 15px 10px 38px;
-            border: 1px solid #b2dfdb;
-            border-radius: 6px;
-            font-size: 14px;
-            background-color: white;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e0e6ef;
+            border-radius: 8px;
+            font-size: 16px;
             transition: all 0.3s;
         }
         
         .search-box input:focus {
             outline: none;
-            border-color: #80cbc4;
-            box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
+            border-color: #2c80ff;
+            box-shadow: 0 0 0 3px rgba(44, 128, 255, 0.1);
         }
         
         .search-icon {
             position: absolute;
-            left: 12px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #80cbc4;
-            font-size: 14px;
+            color: #7a8aa0;
         }
         
-        .admin-buttons {
+        .filter-toggle {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .price-list {
-            max-height: 500px;
-            overflow-y: auto;
-            border: 1px solid #e0f2f1;
-            border-radius: 6px;
-            background-color: white;
-        }
-        
-        .price-item {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr 1.5fr 0.5fr;
-            gap: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #e8f5f3;
             align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e6ef;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #5a6c86;
+        }
+        
+        .filter-toggle:hover {
+            background-color: #f0f5ff;
+            border-color: #2c80ff;
+        }
+        
+        .filter-toggle.active {
+            background-color: #e8f0ff;
+            border-color: #2c80ff;
+            color: #2c80ff;
+        }
+        
+        .filter-toggle i {
+            font-size: 18px;
+        }
+        
+        .info-display {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+        }
+        
+        .info-item {
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e6ef;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .info-label {
             font-size: 13px;
+            color: #7a8aa0;
+            margin-bottom: 5px;
         }
         
-        .price-item.header {
+        .info-value {
+            font-size: 22px;
             font-weight: 700;
-            background-color: #f0f9f8;
-            color: #4a8c87;
-            border-bottom: 2px solid #b2dfdb;
-            position: sticky;
-            top: 0;
-            z-index: 1;
+            color: #2c80ff;
         }
         
-        .price-item:last-child {
-            border-bottom: none;
+        .table-container {
+            padding: 0 30px 30px;
+            overflow-x: auto;
         }
         
-        .price-item:nth-child(even) {
-            background-color: #fafefe;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        thead {
+            background-color: #f0f5ff;
+        }
+        
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #5a6c86;
+            border-bottom: 2px solid #e0e6ef;
+            user-select: none;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr:hover {
+            background-color: #f9fbfd;
+        }
+        
+        tbody tr.selected {
+            background-color: #e8f0ff;
+        }
+        
+        .barcode-col {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #2c5aa0;
+        }
+        
+        .name-col {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .quantity-col {
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .quantity-high {
+            color: #28a745;
+        }
+        
+        .quantity-low {
+            color: #dc3545;
+        }
+        
+        .quantity-zero {
+            color: #ffc107;
+        }
+        
+        .action-col {
+            width: 100px;
+        }
+        
+        .edit-btn, .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn {
+            color: #2c80ff;
+            margin-right: 8px;
+        }
+        
+        .edit-btn:hover {
+            background-color: rgba(44, 128, 255, 0.1);
         }
         
         .delete-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px 6px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            color: #ff8a80;
+            color: #ff4757;
         }
         
         .delete-btn:hover {
-            background-color: rgba(255, 138, 128, 0.15);
+            background-color: rgba(255, 71, 87, 0.1);
         }
         
-        .notification {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 12px 20px;
-            border-radius: 6px;
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-            z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s, fadeOut 0.3s 2.7s;
-        }
-        
-        .success {
-            background-color: #80cbc4;
-        }
-        
-        .error {
-            background-color: #ff8a80;
-        }
-        
-        .info {
-            background-color: #64b5f6;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
-        .hidden {
+        .hidden-row {
             display: none;
         }
         
-        .upload-file-input {
-            display: none;
-        }
-        
-        .upload-progress {
-            margin: 10px 0;
-            padding: 12px;
-            background-color: #f0f9f8;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #4a8c87;
-            border-left: 4px solid #80cbc4;
-        }
-        
-        .data-count {
-            margin: 8px 0 12px 0;
-            font-size: 13px;
-            color: #4a8c87;
-            text-align: center;
-            padding: 6px;
-            background-color: #f7fdfc;
-            border-radius: 4px;
-            border: 1px solid #e0f2f1;
-        }
-        
-        .zero-price {
-            color: #ff8a80;
-            font-weight: 600;
-        }
-        
-        .not-found {
-            color: #ff8a80;
-            font-weight: 600;
-        }
-        
-        .empty-results {
-            text-align: center;
-            color: #7aa9a5;
-            padding: 40px 20px;
+        .footer {
+            padding: 20px 30px;
+            background-color: #f9fbfd;
+            border-top: 1px solid #eaeef5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #7a8aa0;
             font-size: 14px;
         }
         
-        .empty-results i {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #b2dfdb;
+        .footer-links a {
+            color: #2c80ff;
+            text-decoration: none;
+            margin-left: 20px;
         }
         
-        /* 可编辑单元格样式 */
-        .editable-cell {
-            cursor: pointer;
-            position: relative;
-            padding: 4px 8px;
-            border-radius: 3px;
-            transition: all 0.2s;
+        .footer-links a:hover {
+            text-decoration: underline;
         }
         
-        .editable-cell:hover {
-            background-color: rgba(128, 203, 196, 0.1);
-        }
-        
-        .editable-cell.editing {
-            padding: 0;
-        }
-        
-        .editable-cell input {
-            width: 100%;
-            height: 100%;
-            border: 2px solid #80cbc4;
-            padding: 6px;
-            font-size: 13px;
-            outline: none;
-            border-radius: 3px;
-            background-color: white;
-        }
-        
-        .price-toggle.active .fa-eye {
-            display: none;
-        }
-        
-        .price-toggle.active .fa-eye-slash {
-            display: inline-block;
-        }
-        
-        .price-toggle:not(.active) .fa-eye-slash {
-            display: none;
-        }
-        
-        .price-toggle:not(.active) .fa-eye {
-            display: inline-block;
-        }
-        
-        /* 修改：特殊要求样式 - 去掉边框 */
-        .special-method {
-            color: #e65100;
-            font-size: 12px;
-            /* 去掉背景颜色和边框 */
-            padding: 0;
-            border: none;
-            background: none;
-        }
-        
-        /* 手机端行高缩短1mm */
         @media (max-width: 768px) {
-            .home-container {
-                flex-direction: column;
-            }
-            
-            .price-item {
-                grid-template-columns: 1fr;
-                gap: 5px;
-                padding: 8px;
-            }
-            
-            .price-item.header {
-                display: none;
-            }
-            
-            .admin-header {
+            .control-panel {
                 flex-direction: column;
                 align-items: stretch;
             }
@@ -588,1242 +299,345 @@
                 min-width: 100%;
             }
             
-            .admin-buttons {
-                justify-content: center;
-            }
-            
-            .results-table {
-                font-size: 12px;
-            }
-            
-            .results-table th, .results-table td {
-                padding: 5px 4px; /* 减少padding，缩短行高 */
-            }
-            
-            .results-table td {
-                height: 32px; /* 从原来的38px减少到32px，缩短约1.5mm */
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .results-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .total-price {
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 15px;
-                height: auto;
-            }
-            
-            .total-info {
-                flex-direction: row;
+            .info-display {
+                margin-left: 0;
                 justify-content: space-between;
-                align-items: center;
-                gap: 8px;
-                width: 100%;
-                flex-wrap: nowrap;
             }
             
-            .herb-count {
-                flex: 0 0 auto;
-                padding: 3px 8px;
-                font-size: 13px;
-                gap: 6px;
-                white-space: nowrap;
-            }
-            
-            .total-amount {
-                flex: 0 0 auto;
-                font-size: 16px;
-                white-space: nowrap;
-            }
-            
-            .copy-btn {
-                flex: 0 0 auto;
-                padding: 2px 6px;
-                font-size: 11px;
-                min-width: 40px;
-            }
-            
-            .btn {
-                min-width: 120px;
-                padding: 10px 20px;
-            }
-            
-            .btn-sm {
+            .info-item {
                 min-width: auto;
-                padding: 5px 10px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .total-info {
-                flex-wrap: nowrap;
-                gap: 6px;
-            }
-            
-            .herb-count {
-                font-size: 12px;
-                padding: 2px 6px;
-            }
-            
-            .total-amount {
-                font-size: 15px;
-            }
-            
-            .copy-btn {
-                font-size: 10px;
-                padding: 2px 4px;
-                min-width: 36px;
-            }
-            
-            .total-price {
-                padding: 8px 12px;
-            }
-            
-            .results-table td {
-                height: 30px;
-            }
-            
-            .results-table th, .results-table td {
-                padding: 4px 3px;
-            }
-        }
-        
-        /* 超小屏幕设备进一步优化 */
-        @media (max-width: 360px) {
-            .results-table td {
-                height: 28px;
-                font-size: 11px;
-            }
-            
-            .results-table th {
-                font-size: 11px;
-                padding: 4px 3px;
-            }
-            
-            .total-price {
-                padding: 6px 10px;
-            }
-            
-            .total-amount {
-                font-size: 14px;
-            }
-            
-            .herb-count {
-                font-size: 11px;
-                padding: 2px 4px;
-            }
-            
-            .copy-btn {
-                font-size: 9px;
-                padding: 1px 3px;
-                min-width: 32px;
+                flex: 1;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <div class="nav-tabs">
-            <div class="tab active" data-tab="home">方剂计价</div>
-            <div class="tab" data-tab="admin">价格管理</div>
-        </div>
-
-        <!-- 首页 - 方剂价格计算 -->
-        <div id="home" class="tab-content active">
-            <div class="home-container">
-                <!-- 左面板：输入区域 -->
-                <div class="left-panel">
-                    <div class="input-section">
-                        <textarea id="prescriptionInput" placeholder="请输入方剂组成，格式：药材 用量，如：桂枝 15，白芍 25。按回车键可直接计算价格"></textarea>
-
-                        <div class="action-buttons">
-                            <button class="btn btn-primary" id="calculateBtn">
-                                <i class="fas fa-calculator"></i> 计算价格
-                            </button>
-                            <button class="btn btn-secondary" id="clearBtn">
-                                <i class="fas fa-broom"></i> 清空
-                            </button>
-                            <button class="btn btn-outline" id="uploadImageBtn">
-                                <i class="fas fa-image"></i> 上传图片
-                            </button>
-                            <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                        </div>
-                    </div>
+        <header>
+            <div class="logo-area">
+                <div class="logo">药品库存管理系统</div>
+                <div class="logo-sub">高效 · 准确 · 安全</div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">张</div>
+                <div>
+                    <div style="font-weight: 600;">张三丰</div>
+                    <div style="font-size: 13px; opacity: 0.9;">药剂师</div>
                 </div>
-
-                <!-- 右面板：结果显示 -->
-                <div class="right-panel">
-                    <div class="results-section">
-                        <div class="results-header">
-                            <div class="results-title">方剂明细</div>
-                            <div class="price-toggle" id="priceToggle">
-                                <i class="fas fa-eye"></i>
-                                <i class="fas fa-eye-slash"></i>
-                            </div>
-                        </div>
-
-                        <div id="resultsContainer" class="hidden">
-                            <table class="results-table" id="resultsTable">
-                                <thead>
-                                    <tr>
-                                        <th>药材</th>
-                                        <th>用量</th>
-                                        <th>特殊</th>
-                                        <th>位置</th>
-                                        <th class="price-header">价格</th>
-                                        <th>提示</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultsBody"></tbody>
-                            </table>
-                            <div class="total-price">
-                                <div class="total-info">
-                                    <div class="herb-count" id="herbCount">
-                                        <span id="herbCountText">0味</span>
-                                        <button class="copy-btn" id="copyHerbsBtn" title="复制药材列表">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                    <div class="total-amount">
-                                        <span>总价:</span>
-                                        <span id="totalAmount">0.00</span>
-                                        <span>元</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="emptyResults" class="empty-results">
-                            <i class="fas fa-leaf"></i>
-                            <div>输入方剂并点击"计算价格"查看结果</div>
-                        </div>
-                    </div>
+            </div>
+        </header>
+        
+        <div class="control-panel">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="输入药品名称或条码进行搜索 (按Enter确认)">
+            </div>
+            
+            <div class="filter-toggle" id="filterToggle">
+                <i class="fas fa-filter"></i>
+                <span>仅显示有库存</span>
+            </div>
+            
+            <div class="info-display">
+                <div class="info-item">
+                    <div class="info-label">药品总数</div>
+                    <div class="info-value" id="totalCount">25</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">有库存</div>
+                    <div class="info-value" id="inStockCount">19</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">低库存</div>
+                    <div class="info-value" id="lowStockCount">6</div>
                 </div>
             </div>
         </div>
-
-        <!-- 后台管理页面 -->
-        <div id="admin" class="tab-content">
-            <div class="admin-header">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchHerb" placeholder="搜索药材...">
-                </div>
-
-                <div class="admin-buttons">
-                    <button class="btn btn-primary" id="addHerbBtn">
-                        <i class="fas fa-plus"></i> 添加药材
-                    </button>
-                    <button class="btn btn-outline" id="uploadPriceBtn">
-                        <i class="fas fa-upload"></i> 上传Excel
-                    </button>
-                    <input type="file" id="priceFileUpload" accept=".xlsx,.xls" class="upload-file-input">
-                    <button class="btn btn-secondary" id="clearAllBtn">
-                        <i class="fas fa-trash"></i> 清空
-                    </button>
-                </div>
-            </div>
-
-            <div id="uploadProgress" class="upload-progress hidden">
-                正在处理Excel文件...
-            </div>
-
-            <div class="data-count">
-                当前数据: <span id="dataCount">0</span> 条
-            </div>
-
-            <div class="price-list">
-                <div class="price-item header">
-                    <div>药材</div>
-                    <div>用量</div>
-                    <div>单价</div>
-                    <div>位置</div>
-                    <div>提示</div>
-                    <div>操作</div>
-                </div>
-                <div id="priceList"></div>
+        
+        <div class="table-container">
+            <table id="medicineTable">
+                <thead>
+                    <tr>
+                        <th width="15%">条码</th>
+                        <th width="40%">药品名称</th>
+                        <th width="15%">规格</th>
+                        <th width="10%">库存</th>
+                        <th width="20%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 数据将通过JavaScript动态生成 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <div>系统版本：2.0 | 最后更新：2023年10月</div>
+            <div class="footer-links">
+                <a href="https://www.mashangfang.com.cn/" target="_blank">官方网站</a>
+                <a href="#" id="helpLink">帮助</a>
+                <a href="#" id="aboutLink">关于</a>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <script>
-        const STORAGE_KEY = 'herbPriceData';
-        const PRICE_VISIBILITY_KEY = 'priceVisibility';
-        let herbsData = [];
-        let isPriceVisible = true;
-        let currentResults = [];
-        let filteredHerbsData = [];
-        
-        function initializeData() {
-            const storedData = localStorage.getItem(STORAGE_KEY);
-            herbsData = storedData ? JSON.parse(storedData) : [];
-            filteredHerbsData = [...herbsData];
+        // 药品数据
+        const medicineData = [
+            { barcode: "Q02000001", name: "血糖仪", spec: "GA-3", stock: 12 },
+            { barcode: "Q02000002", name: "壮腰健肾片知身坊", spec: "瓶装", stock: 8 },
+            { barcode: "Q02000003", name: "生脉饮四川泰华堂", spec: "10支/盒", stock: 5 },
+            { barcode: "Q02000004", name: "铝合金拐杖", spec: "可调节", stock: 3 },
+            { barcode: "Q02000005", name: "舒肝健胃丸 北京御生堂", spec: "6*10袋", stock: 15 },
+            { barcode: "Q02000006", name: "香砂养胃丸 南京金马药业", spec: "瓶装", stock: 7 },
+            { barcode: "Q02000007", name: "血糖仪GA-3", spec: "标准型", stock: 9 },
+            { barcode: "Q02000008", name: "布洛芬片", spec: "100片/瓶", stock: 22 },
+            { barcode: "Q02000009", name: "生脉饮党参方盾克康福", spec: "盒装", stock: 4 },
+            { barcode: "Q02000010", name: "臂式电子血压计", spec: "健康费", stock: 6 },
+            { barcode: "Q02000011", name: "硫酸氨基葡萄糖胶囊海元堂", spec: "60粒", stock: 11 },
+            { barcode: "Q02000012", name: "六味地黄丸 浓缩丸 江苏", spec: "200丸", stock: 18 },
+            { barcode: "Q02000013", name: "关节止痛膏安微", spec: "10贴", stock: 0 },
+            { barcode: "Q02000014", name: "通宣理肺丸 北京御生堂", spec: "瓶装", stock: 13 },
+            { barcode: "Q02000015", name: "医用红外体温计", spec: "深圳美韵", stock: 7 },
+            { barcode: "Q02000016", name: "消痛贴膏", spec: "10贴", stock: 5 },
+            { barcode: "Q02000017", name: "医用红外体温计", spec: "广东爱心", stock: 9 },
+            { barcode: "Q02000018", name: "舒肝健胃丸", spec: "标准", stock: 14 },
+            { barcode: "Q02000019", name: "麝香追风膏", spec: "5贴", stock: 2 },
+            { barcode: "Q02000020", name: "硫酸氨基葡萄糖胶囊", spec: "和牌", stock: 8 },
+            { barcode: "Q02000021", name: "养血荣筋丸同仁堂", spec: "盒装", stock: 6 },
+            { barcode: "Q02000022", name: "六味地黄胶囊 铁盒装", spec: "60粒", stock: 10 },
+            { barcode: "Q02000023", name: "辅舒良丙酸氟替卡松鼻喷雾剂", spec: "120喷", stock: 3 },
+            { barcode: "Q02000024", name: "碳酸钙d3片", spec: "60片", stock: 16 },
+            { barcode: "Q02000025", name: "妇科十味片", spec: "瓶装", stock: 7 }
+        ];
+
+        // 页面加载时初始化表格
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable(medicineData);
+            updateCounts();
             
-            const visibilityState = localStorage.getItem(PRICE_VISIBILITY_KEY);
-            isPriceVisible = visibilityState === null ? true : visibilityState === 'true';
-            
-            updateDataCount();
-            updatePriceToggleState();
-        }
-        
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(herbsData));
-            updateDataCount();
-        }
-        
-        function savePriceVisibility() {
-            localStorage.setItem(PRICE_VISIBILITY_KEY, isPriceVisible);
-        }
-        
-        function updateDataCount() {
-            document.getElementById('dataCount').textContent = filteredHerbsData.length;
-        }
-        
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-        }
-        
-        // 增强的解析函数 - 新增特殊要求提取功能
-        function parsePrescription(text) {
-            const herbs = [];
-            
-            // 1. 基础预处理
-            text = text.replace(/：/g, ' ').replace(/:/g, ' ');
-            text = text.replace(/大片/g, '3');
-            text = text.replace(/枚/g, '');
-            text = text.replace(/后下化开/g, '后下');
-            text = text.replace(/化开/g, '烊化');
-            text = text.replace(/克/g, '');
-            text = text.replace(/g/g, '');
-            text = text.replace(/（/g, '(').replace(/）/g, ')');
-            text = text.replace(/。/g, ',');
-            text = text.replace(/、/g, ',');
-            
-            // 2. 中药别名映射
-            const herbAliases = {
-                '勾藤': '钩藤',
-                '味子': '五味子'
-            };
-            
-            // 3. 特殊要求关键词列表（需要提取的煎法）
-            const specialMethods = [
-                 '另包','先煎', '后下', '烊化', '冲服', '包煎', '另煎', 
-                '打碎', '捣碎', '研末', '布包', '纱布包'
-            ];
-            
-            // 4. 单位转换映射（个/片 -> 克）
-            const unitConversion = {
-                '生姜': 5,    // 生姜每片5g
-                '大枣': 5,    // 大枣每个5g
-                '草果': 4     // 草果每个4g
-            };
-            
-            // 5. 分割成行
-            const lines = text.split(/[\n,，]/);
-            
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-                
-                // 6. 提取特殊要求（括号内外的都提取）
-                let specialMethod = '';
-                let cleanedLine = line;
-                
-                // 先处理括号内的特殊要求
-                const bracketMatch = line.match(/\((.*?)\)/);
-                if (bracketMatch) {
-                    const bracketContent = bracketMatch[1];
-                    for (const method of specialMethods) {
-                        if (bracketContent.includes(method)) {
-                            specialMethod = method;
-                            break;
-                        }
-                    }
-                    cleanedLine = line.replace(bracketMatch[0], '').trim();
-                }
-                
-                // 如果没有找到括号内的特殊要求，检查整个行
-                if (!specialMethod) {
-                    for (const method of specialMethods) {
-                        if (line.includes(method)) {
-                            specialMethod = method;
-                            // 从行中移除该特殊要求
-                            cleanedLine = line.replace(method, '').trim();
-                            break;
-                        }
-                    }
-                }
-                
-                // 7. 处理中文数字格式
-                const chineseNumbers = {
-                    '十五': '15', '十六': '16', '十七': '17', '十八': '18', '十九': '19',
-                    '十一': '11', '十二': '12', '十三': '13', '十四': '14',
-                    '二十': '20', '三十': '30', '四十': '40', '五十': '50', '六十': '60',
-                    '一': '1', '二': '2', '三': '3', '四': '4', '五': '5',
-                    '六': '6', '七': '7', '八': '8', '九': '9', '十': '10'
-                };
-                
-                // 8. 先处理有"个"或"片"的情况
-                const unitPattern = /([\u4e00-\u9fa5]{1,4})\s*(\d+(?:\.\d+)?)\s*(个|片)/;
-                const unitMatch = cleanedLine.match(unitPattern);
-                
-                if (unitMatch) {
-                    let herbName = unitMatch[1];
-                    let quantity = parseFloat(unitMatch[2]);
-                    let unit = unitMatch[3];
-                    
-                    // 处理别名
-                    if (herbAliases[herbName]) {
-                        herbName = herbAliases[herbName];
-                    }
-                    
-                    // 单位转换
-                    let weight = 0;
-                    if (unitConversion[herbName]) {
-                        weight = quantity * unitConversion[herbName];
-                    } else {
-                        // 默认处理：个 -> 克，片 -> 克（按5g计算）
-                        weight = quantity * 5;
-                    }
-                    
-                    if (!isNaN(weight) && weight > 0) {
-                        herbs.push({
-                            name: herbName,
-                            weight: weight, // 存储转换后的重量
-                            specialMethod: specialMethod,
-                            originalUnit: `${quantity}${unit}`, // 保存原始单位信息用于显示
-                            convertedWeight: weight // 转换后的重量
-                        });
-                        
-                        cleanedLine = cleanedLine.replace(unitMatch[0], '');
-                    }
-                }
-                
-                // 9. 处理中文数字格式：药材名 + 中文数字
-                for (const [chineseNum, arabicNum] of Object.entries(chineseNumbers)) {
-                    const pattern = new RegExp(`([\\u4e00-\\u9fa5]{2,4})${chineseNum}`, 'g');
-                    let match;
-                    
-                    while ((match = pattern.exec(cleanedLine)) !== null) {
-                        let herbName = match[1];
-                        
-                        // 处理别名
-                        if (herbAliases[herbName]) {
-                            herbName = herbAliases[herbName];
-                        }
-                        
-                        const weight = parseFloat(arabicNum);
-                        if (!isNaN(weight) && weight > 0) {
-                            herbs.push({
-                                name: herbName,
-                                weight: weight,
-                                specialMethod: specialMethod,
-                                convertedWeight: weight
-                            });
-                            
-                            cleanedLine = cleanedLine.replace(match[0], '');
-                        }
-                    }
-                }
-                
-                // 10. 处理阿拉伯数字格式
-                const arabicPattern = /([\u4e00-\u9fa5]{2,4})\s*(\d+(?:\.\d+)?)/g;
-                let arabicMatch;
-                
-                while ((arabicMatch = arabicPattern.exec(cleanedLine)) !== null) {
-                    let herbName = arabicMatch[1];
-                    const weightStr = arabicMatch[2];
-                    
-                    // 检查是否已经添加过
-                    const alreadyAdded = herbs.some(h => h.name === herbName || 
-                        (herbAliases[herbName] && h.name === herbAliases[herbName]));
-                    
-                    if (!alreadyAdded) {
-                        // 处理别名
-                        if (herbAliases[herbName]) {
-                            herbName = herbAliases[herbName];
-                        }
-                        
-                        const weight = parseFloat(weightStr);
-                        if (!isNaN(weight) && weight > 0) {
-                            herbs.push({
-                                name: herbName,
-                                weight: weight,
-                                specialMethod: specialMethod,
-                                convertedWeight: weight
-                            });
-                        }
-                    }
+            // 搜索功能
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
                 }
             });
             
-            // 11. 合并相同药材
-            const herbMap = new Map();
-            herbs.forEach(herb => {
-                const key = herb.name;
-                if (herbMap.has(key)) {
-                    const existingHerb = herbMap.get(key);
-                    existingHerb.weight += herb.weight;
-                    existingHerb.convertedWeight += herb.convertedWeight;
-                    // 合并特殊要求
-                    if (herb.specialMethod && existingHerb.specialMethod !== herb.specialMethod) {
-                        existingHerb.specialMethod = existingHerb.specialMethod ? 
-                            `${existingHerb.specialMethod}；${herb.specialMethod}` : herb.specialMethod;
-                    }
-                    // 保留原始单位信息
-                    if (herb.originalUnit) {
-                        if (existingHerb.originalUnit) {
-                            existingHerb.originalUnit += ` + ${herb.originalUnit}`;
-                        } else {
-                            existingHerb.originalUnit = herb.originalUnit;
-                        }
-                    }
-                } else {
-                    herbMap.set(key, {...herb});
-                }
+            // 筛选功能
+            const filterToggle = document.getElementById('filterToggle');
+            filterToggle.addEventListener('click', function() {
+                filterToggle.classList.toggle('active');
+                toggleStockFilter();
             });
             
-            return Array.from(herbMap.values());
-        }
-        
-        function calculatePrice() {
-            const input = document.getElementById('prescriptionInput').value.trim();
-            if (!input) {
-                showNotification('请输入方剂', 'error');
-                return;
-            }
-            
-            const herbs = parsePrescription(input);
-            
-            if (herbs.length === 0) {
-                showNotification('未识别到有效药材信息，请检查格式', 'error');
-                return;
-            }
-            
-            const results = [];
-            let total = 0;
-            let foundCount = 0;
-            
-            herbs.forEach(herb => {
-                // 精确匹配
-                let herbInfo = herbsData.find(item => item.name === herb.name);
-                
-                // 模糊匹配（如果精确匹配失败）
-                if (!herbInfo) {
-                    herbInfo = herbsData.find(item => 
-                        item.name.includes(herb.name) || 
-                        herb.name.includes(item.name)
-                    );
-                }
-                
-                if (herbInfo) {
-                    const price = herbInfo.price * herb.weight;
-                    total += price;
-                    foundCount++;
-                    
-                    results.push({
-                        name: herb.name,
-                        weight: herb.weight,
-                        convertedWeight: herb.convertedWeight || herb.weight,
-                        specialMethod: herb.specialMethod || '',
-                        location: herbInfo.location,
-                        price: price,
-                        hint: herbInfo.hint || '',
-                        isZeroPrice: herbInfo.price === 0,
-                        isFound: true,
-                        unitPrice: herbInfo.price,
-                        originalUnit: herb.originalUnit || '' // 保存原始单位
-                    });
-                } else {
-                    results.push({
-                        name: herb.name,
-                        weight: herb.weight,
-                        convertedWeight: herb.convertedWeight || herb.weight,
-                        specialMethod: herb.specialMethod || '',
-                        location: '无', // 修改：将"未找到"改为"无"
-                        price: 0,
-                        hint: '',
-                        isZeroPrice: true,
-                        isFound: false,
-                        unitPrice: 0,
-                        originalUnit: herb.originalUnit || ''
-                    });
-                }
+            // 帮助和关于链接
+            document.getElementById('helpLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('帮助信息：\n1. 在搜索框中输入药品名称或条码进行搜索\n2. 点击"仅显示有库存"按钮可以筛选有库存的药品\n3. 药品库存数量用颜色标识：绿色-充足，黄色-低库存，红色-无库存\n4. 点击编辑或删除按钮可以对药品进行操作');
             });
             
-            currentResults = results;
-            displayResults(results, total, foundCount, herbs.length);
-            
-            if (foundCount > 0) {
-                showNotification(`识别${herbs.length}味，匹配${foundCount}味，总价${total.toFixed(2)}元`);
-            } else {
-                showNotification(`识别${herbs.length}味，但未匹配到价格`, 'error');
-            }
-        }
+            document.getElementById('aboutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('药品库存管理系统 v2.0\n\n功能：\n- 药品信息管理\n- 快速搜索与筛选\n- 库存状态监控\n\n基于原始VBA代码功能实现，提供更现代化的Web界面。');
+            });
+        });
         
-        function displayResults(results, total, foundCount, totalHerbs) {
-            const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '';
+        // 渲染表格
+        function renderTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
             
-            document.getElementById('herbCountText').textContent = `${totalHerbs}味`;
-            
-            results.forEach((item, index) => {
+            data.forEach(item => {
                 const row = document.createElement('tr');
-                const priceClass = item.isZeroPrice ? 'zero-price' : '';
-                const nameClass = item.isFound ? '' : 'not-found';
                 
-                // 处理特殊要求显示 - 去掉边框样式
-                let specialMethodDisplay = item.specialMethod || '';
-                if (specialMethodDisplay) {
-                    specialMethodDisplay = `<span class="special-method">${specialMethodDisplay}</span>`;
+                // 根据库存设置行类名
+                if (item.stock === 0) {
+                    row.classList.add('quantity-zero-row');
+                } else if (item.stock < 5) {
+                    row.classList.add('quantity-low-row');
                 }
                 
-                // 显示重量 - 只显示数字（转换后的重量）
-                // 对于生姜、大枣、草果等，显示转换后的克数
-                const weightDisplay = item.convertedWeight || item.weight;
+                // 库存显示类名
+                let stockClass = 'quantity-high';
+                if (item.stock === 0) {
+                    stockClass = 'quantity-zero';
+                } else if (item.stock < 5) {
+                    stockClass = 'quantity-low';
+                }
                 
                 row.innerHTML = `
-                    <td class="${nameClass} editable-cell" data-index="${index}" data-field="name">${item.name}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="weight">${weightDisplay}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="specialMethod">${specialMethodDisplay}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="location">${item.location}</td>
-                    <td class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${item.price.toFixed(2)}</td>
-                    <td class="editable-cell" data-index="${index}" data-field="hint">${item.hint || ''}</td>
+                    <td class="barcode-col">${item.barcode}</td>
+                    <td class="name-col">${item.name}</td>
+                    <td>${item.spec}</td>
+                    <td class="quantity-col ${stockClass}">${item.stock}</td>
+                    <td class="action-col">
+                        <button class="edit-btn" onclick="editMedicine('${item.barcode}')" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteMedicine('${item.barcode}')" title="删除">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
                 `;
-                tbody.appendChild(row);
-            });
-            
-            document.getElementById('totalAmount').textContent = total.toFixed(2);
-            document.getElementById('resultsContainer').classList.remove('hidden');
-            document.getElementById('emptyResults').classList.add('hidden');
-            
-            updatePriceDisplay();
-            setupInlineEditing();
-        }
-        
-        // 修改：复制药材列表功能 - 只复制前三列，去掉标题和总价
-        function copyHerbsList() {
-            if (currentResults.length === 0) {
-                showNotification('没有药材数据可复制', 'error');
-                return;
-            }
-            
-            let copyText = ""; // 去掉标题行
-            
-            currentResults.forEach(item => {
-                // 只复制前三列：药材、用量、特殊要求
-                // 用量显示转换后的数字
-                const weightDisplay = item.convertedWeight || item.weight;
-                copyText += `${item.name}\t${weightDisplay}\t${item.specialMethod || ''}\n`;
-            });
-            
-            // 复制到剪贴板
-            navigator.clipboard.writeText(copyText).then(() => {
-                showNotification('药材列表已复制到剪贴板');
-            }).catch(err => {
-                console.error('复制失败:', err);
-                // 备用方法：使用textarea元素
-                const textArea = document.createElement('textarea');
-                textArea.value = copyText;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    showNotification('药材列表已复制到剪贴板');
-                } catch (e) {
-                    showNotification('复制失败，请手动复制', 'error');
-                }
-                document.body.removeChild(textArea);
-            });
-        }
-        
-        function setupInlineEditing() {
-            const editableCells = document.querySelectorAll('.editable-cell');
-            
-            editableCells.forEach(cell => {
-                cell.addEventListener('dblclick', (e) => {
-                    if (e.target.classList.contains('editable-cell')) {
-                        startEditing(e.target);
-                    }
-                });
-            });
-        }
-        
-        function startEditing(cell) {
-            const originalContent = cell.textContent;
-            const field = cell.getAttribute('data-field');
-            const index = parseInt(cell.getAttribute('data-index'));
-            
-            // 如果是特殊要求列，需要处理HTML内容
-            let originalValue = originalContent;
-            if (field === 'specialMethod' && cell.querySelector('.special-method')) {
-                originalValue = cell.querySelector('.special-method').textContent;
-            }
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = originalValue;
-            
-            cell.textContent = '';
-            cell.appendChild(input);
-            cell.classList.add('editing');
-            
-            input.focus();
-            input.select();
-            
-            input.addEventListener('blur', () => finishEditing(cell, input, field, index, originalContent, originalValue));
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    cell.innerHTML = originalContent;
-                    cell.classList.remove('editing');
-                }
-            });
-        }
-        
-        function finishEditing(cell, input, field, index, originalContent, originalValue) {
-            const newValue = input.value.trim();
-            
-            if (newValue === originalValue) {
-                cell.innerHTML = originalContent;
-                cell.classList.remove('editing');
-                return;
-            }
-            
-            if (currentResults[index]) {
-                if (field === 'price') {
-                    const newPrice = parseFloat(newValue);
-                    if (!isNaN(newPrice)) {
-                        currentResults[index].price = newPrice;
-                        recalculateTotal();
-                        cell.textContent = newPrice.toFixed(2);
-                    } else {
-                        cell.innerHTML = originalContent;
-                    }
-                } else if (field === 'weight') {
-                    const newWeight = parseFloat(newValue);
-                    if (!isNaN(newWeight) && newWeight > 0) {
-                        currentResults[index].weight = newWeight;
-                        currentResults[index].convertedWeight = newWeight;
-                        if (currentResults[index].unitPrice > 0) {
-                            currentResults[index].price = currentResults[index].unitPrice * newWeight;
-                        }
-                        recalculateTotal();
-                        cell.textContent = newWeight;
-                        const row = cell.closest('tr');
-                        const priceCell = row.cells[4];
-                        priceCell.textContent = currentResults[index].price.toFixed(2);
-                    } else {
-                        cell.innerHTML = originalContent;
-                    }
-                } else if (field === 'name') {
-                    currentResults[index].name = newValue;
-                    cell.textContent = newValue;
-                } else if (field === 'location') {
-                    currentResults[index].location = newValue;
-                    cell.textContent = newValue;
-                } else if (field === 'hint') {
-                    currentResults[index].hint = newValue;
-                    cell.textContent = newValue;
-                } else if (field === 'specialMethod') {
-                    currentResults[index].specialMethod = newValue;
-                    if (newValue) {
-                        cell.innerHTML = `<span class="special-method">${newValue}</span>`;
-                    } else {
-                        cell.textContent = '';
-                    }
-                }
-            }
-            
-            cell.classList.remove('editing');
-            showNotification('已更新');
-        }
-        
-        function recalculateTotal() {
-            let total = 0;
-            currentResults.forEach(item => {
-                total += item.price || 0;
-            });
-            document.getElementById('totalAmount').textContent = total.toFixed(2);
-        }
-        
-        function updatePriceDisplay() {
-            const priceHeaders = document.querySelectorAll('.price-header');
-            const priceValues = document.querySelectorAll('td:nth-child(5)');
-            const priceToggles = document.querySelectorAll('.price-toggle');
-            
-            if (isPriceVisible) {
-                priceHeaders.forEach(header => header.style.display = 'table-cell');
-                priceValues.forEach(value => {
-                    value.style.display = 'table-cell';
-                });
-                priceToggles.forEach(toggle => {
-                    toggle.classList.remove('active');
-                });
-            } else {
-                priceHeaders.forEach(header => header.style.display = 'none');
-                priceValues.forEach(value => {
-                    value.style.display = 'none';
-                });
-                priceToggles.forEach(toggle => {
-                    toggle.classList.add('active');
-                });
-            }
-        }
-        
-        function updatePriceToggleState() {
-            const priceToggles = document.querySelectorAll('.price-toggle');
-            priceToggles.forEach(toggle => {
-                if (isPriceVisible) {
-                    toggle.classList.remove('active');
-                } else {
-                    toggle.classList.add('active');
-                }
-            });
-        }
-        
-        function togglePriceVisibility() {
-            isPriceVisible = !isPriceVisible;
-            savePriceVisibility();
-            updatePriceToggleState();
-            updatePriceDisplay();
-            
-            showNotification(isPriceVisible ? '已显示价格' : '已隐藏价格', 'info');
-        }
-        
-        function clearInput() {
-            document.getElementById('prescriptionInput').value = '';
-            document.getElementById('resultsBody').innerHTML = '';
-            document.getElementById('totalAmount').textContent = '0.00';
-            document.getElementById('resultsContainer').classList.add('hidden');
-            document.getElementById('emptyResults').classList.remove('hidden');
-            document.getElementById('herbCountText').textContent = '0味';
-            currentResults = [];
-            showNotification('已清空输入和计算结果');
-        }
-        
-        async function handleImageUpload(file) {
-            if (!file) return;
-            
-            showNotification('图片上传功能需要OCR服务，请手动输入方剂', 'info');
-            
-            setTimeout(() => {
-                const mockText = "桂枝 15，白芍 25，炙甘草 15，生姜 3片，大枣 5个，草果 2个";
-                document.getElementById('prescriptionInput').value = mockText;
-                showNotification('图片识别完成（模拟）');
-            }, 1000);
-        }
-        
-        function renderPriceList(filter = '') {
-            const container = document.getElementById('priceList');
-            container.innerHTML = '';
-            
-            filteredHerbsData = herbsData.filter(item => 
-                item.name.toLowerCase().includes(filter.toLowerCase())
-            );
-            
-            if (filteredHerbsData.length === 0) {
-                container.innerHTML = '<div class="price-item" style="text-align:center;color:#888;padding:20px;grid-column:1/-1;">无数据，请上传Excel</div>';
-                updateDataCount();
-                return;
-            }
-            
-            filteredHerbsData.forEach((herb, index) => {
-                const item = document.createElement('div');
-                const priceClass = herb.price === 0 ? 'zero-price' : '';
-                item.className = 'price-item';
-                item.setAttribute('data-original-index', herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price));
-                item.innerHTML = `
-                    <div class="editable-cell" data-index="${index}" data-field="name">${herb.name}</div>
-                    <div class="editable-cell" data-index="${index}" data-field="weight">-</div>
-                    <div class="editable-cell ${priceClass}" data-index="${index}" data-field="price">${herb.price.toFixed(2)}</div>
-                    <div class="editable-cell" data-index="${index}" data-field="location">${herb.location}</div>
-                    <div class="editable-cell" data-index="${index}" data-field="hint">${herb.hint || ''}</div>
-                    <div>
-                        <button class="delete-btn" data-index="${index}" data-original-index="${herbsData.findIndex(h => h.name === herb.name && h.location === herb.location && h.price === herb.price)}"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-            
-            updateDataCount();
-            
-            setupAdminInlineEditing();
-            
-            container.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const originalIndex = parseInt(e.currentTarget.getAttribute('data-original-index'));
-                    deleteHerb(originalIndex);
-                });
-            });
-        }
-        
-        function setupAdminInlineEditing() {
-            const container = document.getElementById('priceList');
-            
-            container.addEventListener('dblclick', (e) => {
-                if (e.target.classList.contains('editable-cell')) {
-                    startAdminEditing(e.target);
-                }
-            });
-        }
-        
-        function startAdminEditing(cell) {
-            const originalContent = cell.textContent;
-            const field = cell.getAttribute('data-field');
-            const index = parseInt(cell.getAttribute('data-index'));
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = originalContent;
-            
-            cell.textContent = '';
-            cell.appendChild(input);
-            cell.classList.add('editing');
-            
-            input.focus();
-            input.select();
-            
-            input.addEventListener('blur', () => finishAdminEditing(cell, input, field, index, originalContent));
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    cell.textContent = originalContent;
-                    cell.classList.remove('editing');
-                }
-            });
-        }
-        
-        function finishAdminEditing(cell, input, field, index, originalContent) {
-            const newValue = input.value.trim();
-            const item = cell.closest('.price-item');
-            const originalIndex = parseInt(item.getAttribute('data-original-index'));
-            
-            if (!newValue || newValue === originalContent) {
-                cell.textContent = originalContent;
-                cell.classList.remove('editing');
-                return;
-            }
-            
-            if (originalIndex === -1 || !herbsData[originalIndex]) {
-                cell.textContent = originalContent;
-                cell.classList.remove('editing');
-                showNotification('未找到对应药材数据', 'error');
-                return;
-            }
-            
-            let success = false;
-            let displayValue = newValue;
-            
-            if (field === 'name') {
-                herbsData[originalIndex].name = newValue;
-                filteredHerbsData[index].name = newValue;
-                success = true;
-            } else if (field === 'location') {
-                herbsData[originalIndex].location = newValue;
-                filteredHerbsData[index].location = newValue;
-                success = true;
-            } else if (field === 'price') {
-                const newPrice = parseFloat(newValue);
-                if (!isNaN(newPrice) && newPrice >= 0) {
-                    herbsData[originalIndex].price = newPrice;
-                    filteredHerbsData[index].price = newPrice;
-                    displayValue = newPrice.toFixed(2);
-                    success = true;
-                } else {
-                    displayValue = originalContent;
-                }
-            } else if (field === 'hint') {
-                herbsData[originalIndex].hint = newValue;
-                filteredHerbsData[index].hint = newValue;
-                success = true;
-            } else if (field === 'weight') {
-                // 后台管理中的重量列通常是占位符，不需要修改
-                displayValue = originalContent;
-                success = true;
-            }
-            
-            if (success) {
-                saveData();
-                cell.textContent = displayValue;
                 
-                if (field === 'price') {
-                    const newPrice = parseFloat(newValue);
-                    if (newPrice === 0) {
-                        cell.classList.add('zero-price');
-                    } else {
-                        cell.classList.remove('zero-price');
-                    }
-                }
-                
-                showNotification('已更新');
-            } else {
-                cell.textContent = originalContent;
-            }
-            
-            cell.classList.remove('editing');
+                tableBody.appendChild(row);
+            });
         }
         
-        function deleteHerb(originalIndex) {
-            if (originalIndex === -1 || !herbsData[originalIndex]) {
-                showNotification('未找到对应药材数据', 'error');
+        // 执行搜索
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                renderTable(medicineData);
+                updateCounts();
                 return;
             }
             
-            if (confirm(`删除 ${herbsData[originalIndex].name}？`)) {
-                herbsData.splice(originalIndex, 1);
-                saveData();
-                renderPriceList(document.getElementById('searchHerb').value);
-                showNotification('药材已删除');
+            // 判断搜索类型：条码（长度>=8且只含字母数字）还是文本
+            const isBarcode = searchTerm.length >= 8 && /^[a-z0-9]+$/i.test(searchTerm);
+            
+            let filteredData;
+            if (isBarcode) {
+                // 条码精确匹配
+                filteredData = medicineData.filter(item => 
+                    item.barcode.toLowerCase() === searchTerm
+                );
+            } else {
+                // 药品名称模糊匹配
+                filteredData = medicineData.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm)
+                );
             }
-        }
-        
-        function handleBulkUpload() {
-            document.getElementById('priceFileUpload').click();
-        }
-        
-        function handleImageBtnClick() {
-            document.getElementById('imageUpload').click();
-        }
-        
-        function processUploadedFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
             
-            const progressDiv = document.getElementById('uploadProgress');
-            progressDiv.classList.remove('hidden');
-            progressDiv.innerHTML = '正在读取Excel文件...';
+            renderTable(filteredData);
             
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    progressDiv.innerHTML = '正在解析工作表...';
+            // 如果有筛选结果，高亮第一行
+            if (filteredData.length > 0) {
+                const firstRow = document.querySelector('#tableBody tr');
+                if (firstRow) {
+                    firstRow.classList.add('selected');
                     
-                    const workbook = XLSX.read(data, { 
-                        type: 'array',
-                        cellDates: false,
-                        cellNF: false,
-                        cellText: true,
-                        raw: false
-                    });
-                    
-                    const sheetNames = workbook.SheetNames;
-                    progressDiv.innerHTML = `找到 ${sheetNames.length} 个工作表，处理第一个工作表...`;
-                    
-                    const firstSheet = workbook.Sheets[sheetNames[0]];
-                    
-                    const sheetData = XLSX.utils.sheet_to_json(firstSheet, { 
-                        header: 1,
-                        defval: '',
-                        blankrows: false
-                    });
-                    
-                    progressDiv.innerHTML = `找到 ${sheetData.length} 行数据，正在处理...`;
-                    
-                    const newHerbsData = [];
-                    let processedCount = 0;
-                    let skippedCount = 0;
-                    let zeroPriceCount = 0;
-                    
-                    for (let i = 0; i < sheetData.length; i++) {
-                        const row = sheetData[i];
-                        
-                        if (!Array.isArray(row) || row.length === 0) {
-                            skippedCount++;
-                            continue;
-                        }
-                        
-                        const herbName = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : '';
-                        const location = row[3] !== undefined && row[3] !== null ? String(row[3]).trim() : '';
-                        const hint = row[4] !== undefined && row[4] !== null ? String(row[4]).trim() : '';
-                        const priceCell = row[10] !== undefined ? row[10] : '';
-                        
-                        if (!herbName || herbName === '' || herbName === 'undefined' || herbName.toLowerCase() === 'null') {
-                            skippedCount++;
-                            continue;
-                        }
-                        
-                        let price = 0;
-                        
-                        if (priceCell === '' || priceCell === null || priceCell === undefined) {
-                            price = 0;
-                            zeroPriceCount++;
-                        } else {
-                            price = parseFloat(priceCell);
-                            if (isNaN(price)) {
-                                const priceStr = String(priceCell);
-                                const priceMatch = priceStr.match(/[-+]?\d*\.?\d+/);
-                                if (priceMatch) {
-                                    price = parseFloat(priceMatch[0]);
-                                }
-                            }
-                            
-                            if (isNaN(price)) {
-                                price = 0;
-                            }
-                            
-                            if (price === 0) zeroPriceCount++;
-                        }
-                        
-                        newHerbsData.push({
-                            name: herbName,
-                            location: location,
-                            price: price,
-                            hint: hint
-                        });
-                        
-                        processedCount++;
-                        
-                        if (processedCount % 200 === 0) {
-                            progressDiv.innerHTML = `已处理 ${processedCount} 条数据...`;
-                        }
-                    }
-                    
-                    progressDiv.innerHTML = `处理完成！有效数据: ${processedCount} 条，跳过: ${skippedCount} 条，零价格: ${zeroPriceCount} 条`;
-                    
-                    if (newHerbsData.length === 0) {
-                        showNotification('未在Excel文件中找到有效数据', 'error');
-                        progressDiv.classList.add('hidden');
-                        return;
-                    }
-                    
-                    herbsData = newHerbsData;
-                    saveData();
-                    
+                    // 模拟VBA中的定位到H列（这里对应操作列）
                     setTimeout(() => {
-                        renderPriceList();
-                        progressDiv.classList.add('hidden');
-                        showNotification(`成功上传 ${newHerbsData.length} 条药材记录（其中 ${zeroPriceCount} 条价格为0）`, 'success');
-                    }, 800);
-                    
-                    event.target.value = '';
-                    
-                } catch (error) {
-                    console.error('处理Excel文件时出错:', error);
-                    progressDiv.classList.add('hidden');
-                    showNotification(`处理文件出错: ${error.message}`, 'error');
+                        const editBtn = firstRow.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.focus();
+                        }
+                    }, 100);
                 }
-            };
-            
-            reader.onerror = function() {
-                progressDiv.classList.add('hidden');
-                showNotification('读取文件失败', 'error');
-            };
-            
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function clearAllData() {
-            if (herbsData.length === 0) {
-                showNotification('无数据可清空', 'info');
-                return;
-            }
-            
-            if (confirm(`清空${herbsData.length}条记录？`)) {
-                herbsData = [];
-                filteredHerbsData = [];
-                saveData();
-                renderPriceList();
-                showNotification('已清空所有数据');
             }
         }
         
-        // 新增：回车键计算功能
-        function setupEnterKeyCalculation() {
-            const prescriptionInput = document.getElementById('prescriptionInput');
+        // 切换库存筛选
+        function toggleStockFilter() {
+            const filterToggle = document.getElementById('filterToggle');
+            const isActive = filterToggle.classList.contains('active');
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
             
-            prescriptionInput.addEventListener('keydown', (e) => {
-                // 检查是否按下回车键，且没有按着Ctrl或Shift
-                if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-                    e.preventDefault(); // 防止在textarea中换行
-                    calculatePrice();
+            let filteredData;
+            
+            if (searchTerm) {
+                // 如果已有搜索，在此基础上筛选
+                const isBarcode = searchTerm.length >= 8 && /^[a-z0-9]+$/i.test(searchTerm);
+                
+                if (isBarcode) {
+                    filteredData = medicineData.filter(item => 
+                        item.barcode.toLowerCase() === searchTerm
+                    );
+                } else {
+                    filteredData = medicineData.filter(item => 
+                        item.name.toLowerCase().includes(searchTerm)
+                    );
                 }
-            });
+            } else {
+                filteredData = [...medicineData];
+            }
+            
+            if (isActive) {
+                // 仅显示有库存（stock > 0）的药品
+                filteredData = filteredData.filter(item => item.stock > 0);
+                
+                // 按库存降序排序
+                filteredData.sort((a, b) => b.stock - a.stock);
+            } else {
+                // 恢复原始顺序（按barcode排序）
+                filteredData.sort((a, b) => a.barcode.localeCompare(b.barcode));
+            }
+            
+            renderTable(filteredData);
         }
         
-        function initApp() {
-            initializeData();
+        // 更新计数显示
+        function updateCounts() {
+            const totalCount = medicineData.length;
+            const inStockCount = medicineData.filter(item => item.stock > 0).length;
+            const lowStockCount = medicineData.filter(item => item.stock > 0 && item.stock < 5).length;
             
-            // 添加事件监听器
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.getAttribute('data-tab');
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById(tabId).classList.add('active');
-                    if (tabId === 'admin') renderPriceList();
-                });
-            });
-            
-            document.getElementById('calculateBtn').addEventListener('click', calculatePrice);
-            document.getElementById('clearBtn').addEventListener('click', clearInput);
-            document.getElementById('uploadImageBtn').addEventListener('click', handleImageBtnClick);
-            document.getElementById('imageUpload').addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleImageUpload(e.target.files[0]);
-                }
-            });
-            document.getElementById('addHerbBtn').addEventListener('click', () => {
-                const newHerb = {
-                    name: '新药材',
-                    location: '',
-                    price: 0,
-                    hint: ''
-                };
-                herbsData.push(newHerb);
-                filteredHerbsData.push(newHerb);
-                saveData();
-                renderPriceList();
-                showNotification('已添加新药材，请双击修改');
-            });
-            document.getElementById('uploadPriceBtn').addEventListener('click', handleBulkUpload);
-            document.getElementById('priceFileUpload').addEventListener('change', processUploadedFile);
-            document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
-            
-            document.getElementById('priceToggle').addEventListener('click', togglePriceVisibility);
-            
-            document.getElementById('searchHerb').addEventListener('input', (e) => {
-                renderPriceList(e.target.value);
-            });
-            
-            // 新增：复制按钮事件
-            document.getElementById('copyHerbsBtn').addEventListener('click', copyHerbsList);
-            
-            // 初始化回车键计算功能
-            setupEnterKeyCalculation();
-            
-            renderPriceList();
-            document.getElementById('resultsContainer').classList.add('hidden');
-            document.getElementById('emptyResults').classList.remove('hidden');
-            
-            updatePriceDisplay();
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('inStockCount').textContent = inStockCount;
+            document.getElementById('lowStockCount').textContent = lowStockCount;
         }
         
-        document.addEventListener('DOMContentLoaded', initApp);
+        // 编辑药品
+        function editMedicine(barcode) {
+            const medicine = medicineData.find(item => item.barcode === barcode);
+            if (medicine) {
+                const newStock = prompt(`编辑 ${medicine.name} 的库存数量：`, medicine.stock);
+                if (newStock !== null && !isNaN(newStock) && newStock.trim() !== '') {
+                    medicine.stock = parseInt(newStock);
+                    
+                    // 重新渲染表格
+                    const searchTerm = document.getElementById('searchInput').value.trim();
+                    if (searchTerm) {
+                        performSearch();
+                    } else {
+                        const filterToggle = document.getElementById('filterToggle');
+                        if (filterToggle.classList.contains('active')) {
+                            toggleStockFilter();
+                        } else {
+                            renderTable(medicineData);
+                        }
+                    }
+                    
+                    updateCounts();
+                    alert('库存已更新！');
+                }
+            }
+        }
+        
+        // 删除药品
+        function deleteMedicine(barcode) {
+            if (confirm('确定要删除此药品记录吗？')) {
+                const index = medicineData.findIndex(item => item.barcode === barcode);
+                if (index !== -1) {
+                    medicineData.splice(index, 1);
+                    
+                    // 重新渲染表格
+                    const searchTerm = document.getElementById('searchInput').value.trim();
+                    if (searchTerm) {
+                        performSearch();
+                    } else {
+                        const filterToggle = document.getElementById('filterToggle');
+                        if (filterToggle.classList.contains('active')) {
+                            toggleStockFilter();
+                        } else {
+                            renderTable(medicineData);
+                        }
+                    }
+                    
+                    updateCounts();
+                    alert('药品记录已删除！');
+                }
+            }
+        }
+        
+        // 模拟VBA中的单元格导航功能
+        function navigateCells() {
+            // 这里可以扩展实现类似VBA中的单元格导航逻辑
+            console.log("单元格导航功能（模拟VBA行为）");
+        }
     </script>
 </body>
 </html>
