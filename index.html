@@ -1380,7 +1380,7 @@
             } else {
                 priceHeaders.forEach(header => header.style.display = 'none');
                 priceValues.forEach(value => {
-                    value.style.display = 'none');
+                    value.style.display = 'none';
                 });
                 priceToggles.forEach(toggle => {
                     toggle.classList.add('active');
@@ -1419,72 +1419,16 @@
             showNotification('已清空输入和计算结果');
         }
         
-        // 修改：移除了模拟OCR内容
         async function handleImageUpload(file) {
             if (!file) return;
             
-            // 检查文件类型
-            if (!file.type.match('image.*')) {
-                showNotification('请选择图片文件', 'error');
-                return;
-            }
+            showNotification('图片上传功能需要OCR服务，请手动输入方剂', 'info');
             
-            // 检查浏览器是否支持OCR API
-            if (!('TextDetector' in window)) {
-                showNotification('您的浏览器不支持图片文字识别功能', 'error');
-                showNotification('请使用Chrome 89+、Edge 89+或支持OCR的浏览器', 'info');
-                return;
-            }
-            
-            try {
-                showNotification('正在识别图片中的文字...', 'info');
-                
-                // 创建图片对象
-                const img = await createImageBitmap(file);
-                
-                // 使用浏览器内置OCR（如果可用）
-                const textDetector = new TextDetector();
-                const textList = await textDetector.detect(img);
-                
-                if (textList && textList.length > 0) {
-                    // 提取识别到的文字
-                    let recognizedText = textList.map(text => text.rawValue).join('\n');
-                    
-                    // 简单处理识别结果
-                    recognizedText = processOCRText(recognizedText);
-                    
-                    if (recognizedText.trim()) {
-                        document.getElementById('prescriptionInput').value = recognizedText;
-                        showNotification('图片识别完成');
-                    } else {
-                        showNotification('未识别到中药信息', 'error');
-                    }
-                } else {
-                    showNotification('未识别到文字', 'error');
-                }
-            } catch (error) {
-                console.error('OCR识别错误:', error);
-                showNotification('图片识别失败，请手动输入', 'error');
-            }
-        }
-        
-        function processOCRText(text) {
-            // 简单的文本处理，提取中药相关信息
-            let processedText = text;
-            
-            // 替换常见符号
-            processedText = processedText.replace(/：/g, ' ');
-            processedText = processedText.replace(/:/g, ' ');
-            processedText = processedText.replace(/，/g, ',');
-            processedText = processedText.replace(/。/g, '.');
-            processedText = processedText.replace(/、/g, ',');
-            processedText = processedText.replace(/；/g, ',');
-            processedText = processedText.replace(/;/g, ',');
-            
-            // 清理多余的空格和换行
-            processedText = processedText.replace(/\s+/g, ' ').trim();
-            
-            return processedText;
+            setTimeout(() => {
+                const mockText = "桂枝 15，白芍 25，炙甘草 15，生姜 3片，大枣 5个，草果 2个";
+                document.getElementById('prescriptionInput').value = mockText;
+                showNotification('图片识别完成（模拟）');
+            }, 1000);
         }
         
         function renderPriceList(filter = '') {
