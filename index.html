@@ -728,6 +728,30 @@
                 min-width: 32px;
             }
         }
+
+        /* 复制成功提示框样式 */
+        .copy-success-tips {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background: rgba(76, 175, 160, 0.9);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .copy-success-tips.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
     </style>
 </head>
 
@@ -856,6 +880,9 @@
         </div>
     </div>
 
+    <!-- 复制成功提示框 -->
+    <div class="copy-success-tips" id="copySuccessTips">复制成功</div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
@@ -865,6 +892,14 @@
         let isPriceVisible = true;
         let currentResults = [];
         let filteredHerbsData = [];
+        
+        // OCR配置 - 请替换为你的实际API密钥
+        const OCR_CONFIG = {
+            apiKey: '你的百度API Key',
+            secretKey: '你的百度Secret Key',
+            accessToken: '',
+            tokenExpires: 0
+        };
         
         function initializeData() {
             const storedData = localStorage.getItem(STORAGE_KEY);
@@ -897,6 +932,17 @@
             notification.textContent = message;
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
+        }
+        
+        // 显示复制成功提示框
+        function showCopySuccessTips() {
+            const tips = document.getElementById('copySuccessTips');
+            tips.classList.add('show');
+            
+            // 2秒后自动隐藏
+            setTimeout(() => {
+                tips.classList.remove('show');
+            }, 2000);
         }
         
         // 增强的解析函数 - 新增特殊要求提取功能
@@ -1235,7 +1281,8 @@
             
             // 复制到剪贴板
             navigator.clipboard.writeText(copyText).then(() => {
-                showNotification('药材列表已复制到剪贴板');
+                // 显示复制成功提示框
+                showCopySuccessTips();
             }).catch(err => {
                 console.error('复制失败:', err);
                 // 备用方法：使用textarea元素
@@ -1245,7 +1292,8 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showNotification('药材列表已复制到剪贴板');
+                    // 显示复制成功提示框
+                    showCopySuccessTips();
                 } catch (e) {
                     showNotification('复制失败，请手动复制', 'error');
                 }
@@ -1419,16 +1467,105 @@
             showNotification('已清空输入和计算结果');
         }
         
+        // 获取百度OCR Access Token
+        async function getOcrAccessToken() {
+            // 检查token是否过期
+            if (OCR_CONFIG.accessToken && Date.now() < OCR_CONFIG.tokenExpires) {
+                return OCR_CONFIG.accessToken;
+            }
+            
+            try {
+                const response = await fetch(`https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${OCR_CONFIG.apiKey}&client_secret=${OCR_CONFIG.secretKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    OCR_CONFIG.accessToken = data.access_token;
+                    // token有效期为30天，这里设置为29天
+                    OCR_CONFIG.tokenExpires = Date.now() + (29 * 24 * 60 * 60 * 1000);
+                    return data.access_token;
+                } else {
+                    throw new Error('获取OCR Token失败: ' + (data.error_description || '未知错误'));
+                }
+            } catch (error) {
+                console.error('获取OCR Token出错:', error);
+                throw error;
+            }
+        }
+        
+        // 调用百度OCR识别图片
+        async function recognizeImageWithOCR(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    try {
+                        // 获取base64编码
+                        const base64Data = e.target.result.split(',')[1];
+                        
+                        // 获取access token
+                        const token = await getOcrAccessToken();
+                        
+                        // 调用通用文字识别接口
+                        const response = await fetch(`https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${token}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `image=${encodeURIComponent(base64Data)}&language_type=CHN_ENG`
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.words_result) {
+                            // 拼接识别结果
+                            let text = '';
+                            data.words_result.forEach(item => {
+                                text += item.words + '\n';
+                            });
+                            resolve(text.trim());
+                        } else {
+                            reject(new Error('OCR识别失败: ' + (data.error_msg || '未知错误')));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('读取图片文件失败'));
+                };
+                
+                // 以base64格式读取文件
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 修改后的图片上传处理函数
         async function handleImageUpload(file) {
             if (!file) return;
             
-            showNotification('图片上传功能需要OCR服务，请手动输入方剂', 'info');
-            
-            setTimeout(() => {
-                const mockText = "桂枝 15，白芍 25，炙甘草 15，生姜 3片，大枣 5个，草果 2个";
-                document.getElementById('prescriptionInput').value = mockText;
-                showNotification('图片识别完成（模拟）');
-            }, 1000);
+            try {
+                showNotification('正在识别图片中的文字，请稍候...', 'info');
+                
+                // 调用OCR识别
+                const text = await recognizeImageWithOCR(file);
+                
+                if (text) {
+                    document.getElementById('prescriptionInput').value = text;
+                    showNotification('图片识别完成，已填充识别结果');
+                } else {
+                    showNotification('未识别到任何文字', 'error');
+                }
+            } catch (error) {
+                console.error('OCR识别出错:', error);
+                showNotification(`识别失败: ${error.message}，请手动输入方剂`, 'error');
+            }
         }
         
         function renderPriceList(filter = '') {
