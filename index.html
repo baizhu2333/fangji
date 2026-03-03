@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中药计价系统</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css ">
     <style>
         * {
             margin: 0;
@@ -188,6 +188,12 @@
             flex: 0 0 auto;
         }
         
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
         .results-section {
             background-color: #f7fdfc;
             border-radius: 8px;
@@ -250,8 +256,12 @@
         .results-table td {
             padding: 8px;
             border-bottom: 1px solid #e8f5f3;
-            height: 38px;
+            height: 32px;
             position: relative;
+            /* 防止换行 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .results-table tr:nth-child(even) {
@@ -602,6 +612,11 @@
             
             .results-table td {
                 height: 32px; /* 从原来的38px减少到32px，缩短约1.5mm */
+                /* 强制不换行 */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 80px; /* 限制最大宽度，防止撑开 */
             }
             
             .action-buttons {
@@ -690,6 +705,7 @@
             
             .results-table td {
                 height: 30px;
+                max-width: 60px; /* 更小屏幕进一步限制宽度 */
             }
             
             .results-table th, .results-table td {
@@ -702,6 +718,7 @@
             .results-table td {
                 height: 28px;
                 font-size: 11px;
+                max-width: 50px;
             }
             
             .results-table th {
@@ -776,6 +793,12 @@
                             </button>
                             <button class="btn btn-secondary" id="clearBtn">
                                 <i class="fas fa-broom"></i> 清空
+                            </button>
+                            <button class="btn btn-outline" id="prevPrescriptionBtn" disabled>
+                                <i class="fas fa-arrow-left"></i> 上个方剂
+                            </button>
+                            <button class="btn btn-outline" id="nextPrescriptionBtn" disabled>
+                                <i class="fas fa-arrow-right"></i> 下个方剂
                             </button>
                             <button class="btn btn-outline" id="uploadImageBtn">
                                 <i class="fas fa-image"></i> 上传图片
@@ -883,15 +906,21 @@
     <!-- 复制成功提示框 -->
     <div class="copy-success-tips" id="copySuccessTips">复制成功</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js "></script>
 
     <script>
         const STORAGE_KEY = 'herbPriceData';
         const PRICE_VISIBILITY_KEY = 'priceVisibility';
+        const PRESCRIPTION_HISTORY_KEY = 'prescriptionHistory';
         let herbsData = [];
         let isPriceVisible = true;
         let currentResults = [];
         let filteredHerbsData = [];
+        
+        // 方剂历史记录管理
+        let prescriptionHistory = [];
+        let currentHistoryIndex = -1;
+        const MAX_HISTORY_SIZE = 10; // 最多保存10个历史记录
         
         // OCR配置 - 请替换为你的实际API密钥
         const OCR_CONFIG = {
@@ -909,8 +938,16 @@
             const visibilityState = localStorage.getItem(PRICE_VISIBILITY_KEY);
             isPriceVisible = visibilityState === null ? true : visibilityState === 'true';
             
+            // 加载历史记录
+            const storedHistory = localStorage.getItem(PRESCRIPTION_HISTORY_KEY);
+            if (storedHistory) {
+                prescriptionHistory = JSON.parse(storedHistory);
+                currentHistoryIndex = prescriptionHistory.length - 1;
+            }
+            
             updateDataCount();
             updatePriceToggleState();
+            updateHistoryButtons();
         }
         
         function saveData() {
@@ -920,6 +957,73 @@
         
         function savePriceVisibility() {
             localStorage.setItem(PRICE_VISIBILITY_KEY, isPriceVisible);
+        }
+        
+        // 保存历史记录到本地存储
+        function saveHistory() {
+            localStorage.setItem(PRESCRIPTION_HISTORY_KEY, JSON.stringify(prescriptionHistory));
+        }
+        
+        // 添加到历史记录
+        function addToHistory(prescriptionText) {
+            if (!prescriptionText || prescriptionText.trim() === '') return;
+            
+            // 如果当前不是最后一个，删除当前之后的记录
+            if (currentHistoryIndex < prescriptionHistory.length - 1) {
+                prescriptionHistory = prescriptionHistory.slice(0, currentHistoryIndex + 1);
+            }
+            
+            // 如果与最后一个记录相同，不添加
+            if (prescriptionHistory.length > 0 && 
+                prescriptionHistory[prescriptionHistory.length - 1] === prescriptionText.trim()) {
+                return;
+            }
+            
+            prescriptionHistory.push(prescriptionText.trim());
+            
+            // 限制历史记录数量
+            if (prescriptionHistory.length > MAX_HISTORY_SIZE) {
+                prescriptionHistory.shift();
+            }
+            
+            currentHistoryIndex = prescriptionHistory.length - 1;
+            saveHistory();
+            updateHistoryButtons();
+        }
+        
+        // 更新历史记录按钮状态
+        function updateHistoryButtons() {
+            const prevBtn = document.getElementById('prevPrescriptionBtn');
+            const nextBtn = document.getElementById('nextPrescriptionBtn');
+            
+            prevBtn.disabled = currentHistoryIndex <= 0;
+            nextBtn.disabled = currentHistoryIndex >= prescriptionHistory.length - 1;
+        }
+        
+        // 加载上一个方剂
+        function loadPreviousPrescription() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                const text = prescriptionHistory[currentHistoryIndex];
+                document.getElementById('prescriptionInput').value = text;
+                updateHistoryButtons();
+                showNotification(`已恢复到第 ${currentHistoryIndex + 1} 个方剂`);
+                // 自动计算
+                calculatePrice(false); // false表示不添加到历史，避免重复
+            }
+        }
+        
+        // 加载下一个方剂
+        function loadNextPrescription() {
+            if (currentHistoryIndex < prescriptionHistory.length - 1) {
+                currentHistoryIndex++;
+                const text = prescriptionHistory[currentHistoryIndex];
+                document.getElementById('prescriptionInput').value = text;
+                updateHistoryButtons();
+                showNotification(`已恢复到第 ${currentHistoryIndex + 1} 个方剂`);
+                // 自动计算
+                calculatePrice(false); // false表示不添加到历史，避免重复
+            }
         }
         
         function updateDataCount() {
@@ -1148,11 +1252,16 @@
             return Array.from(herbMap.values());
         }
         
-        function calculatePrice() {
+        function calculatePrice(addToHistoryFlag = true) {
             const input = document.getElementById('prescriptionInput').value.trim();
             if (!input) {
                 showNotification('请输入方剂', 'error');
                 return;
+            }
+            
+            // 添加到历史记录（仅在用户主动计算时添加）
+            if (addToHistoryFlag) {
+                addToHistory(input);
             }
             
             const herbs = parsePrescription(input);
@@ -1475,7 +1584,7 @@
             }
             
             try {
-                const response = await fetch(`https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${OCR_CONFIG.apiKey}&client_secret=${OCR_CONFIG.secretKey}`, {
+                const response = await fetch(`https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id= ${OCR_CONFIG.apiKey}&client_secret=${OCR_CONFIG.secretKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1512,7 +1621,7 @@
                         const token = await getOcrAccessToken();
                         
                         // 调用通用文字识别接口
-                        const response = await fetch(`https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${token}`, {
+                        const response = await fetch(`https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token= ${token}`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -1916,8 +2025,13 @@
                 });
             });
             
-            document.getElementById('calculateBtn').addEventListener('click', calculatePrice);
+            document.getElementById('calculateBtn').addEventListener('click', () => calculatePrice(true));
             document.getElementById('clearBtn').addEventListener('click', clearInput);
+            
+            // 新增：上个/下个方剂按钮事件
+            document.getElementById('prevPrescriptionBtn').addEventListener('click', loadPreviousPrescription);
+            document.getElementById('nextPrescriptionBtn').addEventListener('click', loadNextPrescription);
+            
             document.getElementById('uploadImageBtn').addEventListener('click', handleImageBtnClick);
             document.getElementById('imageUpload').addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
